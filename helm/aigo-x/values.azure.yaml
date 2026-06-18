@@ -1,0 +1,100 @@
+# ── Azure cloud overlay ─────────────────────────────────────────────────────
+# Applied on top of values.prod.yaml when deploying to AKS.
+# Injected by azure/deploy.sh via: -f values.azure.yaml
+# Dynamic values (endpoints, registry) are passed via --set flags in deploy.sh.
+
+global:
+  cloud: azure
+  # imageRegistry and imageTag are set via --set in deploy.sh
+
+# Disable Helm-managed secret creation.
+# aigo-x-secrets is owned by the Key Vault CSI SecretProviderClass which syncs
+# KV secrets at pod mount time — Helm must not also create/overwrite this object.
+secrets:
+  create: false
+
+# Disable in-chart PostgreSQL (use Azure DB for PostgreSQL Flexible Server)
+postgres:
+  enabled: false
+
+# Disable in-chart Redis (use Azure Cache for Redis)
+redis:
+  enabled: false
+
+# ── Secret injection via Key Vault CSI driver ─────────────────────────────────
+# Pods mount a volume from the SecretProviderClass (aigo-x-keyvault),
+# which syncs Key Vault secrets into a Kubernetes Secret named aigo-x-secrets.
+# All services reference that K8s Secret for env vars.
+secretProvider:
+  enabled: true
+  className: aigo-x-keyvault
+  # secretName is the K8s Secret created by the CSI SecretProviderClass
+  secretName: aigo-x-secrets
+
+# ── Ingress — Azure Application Gateway (AGIC) ────────────────────────────────
+# Override the default nginx ingress class so AGIC reconciles these objects
+# and programs the App Gateway backend pools / routing rules automatically.
+gateway:
+  ingress:
+    className: azure/application-gateway
+    annotations:
+      kubernetes.io/ingress.class: azure/application-gateway
+      appgw.ingress.kubernetes.io/backend-path-prefix: "/"
+      appgw.ingress.kubernetes.io/ssl-redirect: "false"
+      appgw.ingress.kubernetes.io/request-timeout: "120"
+
+web:
+  ingress:
+    className: azure/application-gateway
+    annotations:
+      kubernetes.io/ingress.class: azure/application-gateway
+      appgw.ingress.kubernetes.io/backend-path-prefix: "/"
+      appgw.ingress.kubernetes.io/ssl-redirect: "false"
+      appgw.ingress.kubernetes.io/request-timeout: "60"
+
+# Per-service env overrides — populated by deploy.sh --set flags
+# Each service gets:
+#   DB_HOST, DB_NAME, DB_USER → from Terraform output (postgres FQDN)
+#   DB_PASSWORD               → from K8s Secret aigo-x-secrets
+#   REDIS_HOST                → from Terraform output (redis hostname)
+#   REDIS_PORT                → 6380 (Azure Cache uses SSL port)
+#   REDIS_TLS                 → true
+#
+# These are injected at deploy time:
+#   helm upgrade ... \
+#     --set-string "global.dbHost=$POSTGRES_FQDN" \
+#     --set-string "global.redisHost=$REDIS_HOST" \
+#     --set        "global.redisTls=true" \
+#     --set        "global.redisPort=6380"
+
+gateway:
+  env:
+    - name: DB_HOST
+      valueFrom:
+        fieldRef:
+          fieldPath: metadata.annotations['global.dbHost']
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: aigo-x-secrets
+          key: DB_PASSWORD
+    - name: REDIS_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: aigo-x-secrets
+          key: REDIS_PASSWORD
+    - name: JWT_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: aigo-x-secrets
+          key: JWT_SECRET
+    - name: TOKEN_ENCRYPTION_KEY
+      valueFrom:
+        secretKeyRef:
+          name: aigo-x-secrets
+          key: TOKEN_ENCRYPTION_KEY
+    - name: OPENAI_API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: aigo-x-secrets
+          key: OPENAI_API_KEY

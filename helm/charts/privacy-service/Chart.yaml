@@ -1,0 +1,6 @@
+apiVersion: v2
+name: privacy-service
+description: AIGO-X GRC Platform — privacy-service
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

@@ -1,0 +1,1194 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.2.0
+  description: DuFense GRC Platform API Gateway
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication & session management
+  - name: users
+    description: User management
+  - name: tenants
+    description: Multi-tenant management
+  - name: dashboard
+    description: Dashboard KPIs and activity
+  - name: risks
+    description: Risk register
+  - name: compliance
+    description: Compliance frameworks and controls
+  - name: security
+    description: Security assets and findings
+  - name: privacy
+    description: Privacy DSARs and DPIAs
+  - name: tickets
+    description: Service desk tickets
+
+paths:
+
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Authenticate user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Invalidate session
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResult"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current authenticated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/mfa/setup:
+    post:
+      operationId: setupMfa
+      tags: [auth]
+      summary: Generate MFA TOTP secret and QR code
+      responses:
+        "200":
+          description: MFA setup info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaSetup"
+
+  /auth/mfa/verify:
+    post:
+      operationId: verifyMfa
+      tags: [auth]
+      summary: Verify MFA token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaVerifyInput"
+      responses:
+        "200":
+          description: MFA verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+        "401":
+          description: Invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List all users in tenant
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get a user by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: User
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /tenants:
+    get:
+      operationId: listTenants
+      tags: [tenants]
+      summary: List tenants
+      responses:
+        "200":
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+    post:
+      operationId: createTenant
+      tags: [tenants]
+      summary: Create a tenant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  /tenants/{id}:
+    get:
+      operationId: getTenant
+      tags: [tenants]
+      summary: Get a tenant by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tenant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+    patch:
+      operationId: updateTenant
+      tags: [tenants]
+      summary: Update a tenant
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TenantUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+
+  /dashboard/kpis:
+    get:
+      operationId: getDashboardKpis
+      tags: [dashboard]
+      summary: Get dashboard KPI metrics
+      responses:
+        "200":
+          description: KPI data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardKpis"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity feed
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /risks:
+    get:
+      operationId: listRisks
+      tags: [risks]
+      summary: List all risks
+      responses:
+        "200":
+          description: Risks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Risk"
+    post:
+      operationId: createRisk
+      tags: [risks]
+      summary: Create a risk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Risk"
+
+  /risks/{id}:
+    get:
+      operationId: getRisk
+      tags: [risks]
+      summary: Get a risk by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Risk
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Risk"
+    patch:
+      operationId: updateRisk
+      tags: [risks]
+      summary: Update a risk
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RiskUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Risk"
+    delete:
+      operationId: deleteRisk
+      tags: [risks]
+      summary: Delete a risk
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /compliance/frameworks:
+    get:
+      operationId: listFrameworks
+      tags: [compliance]
+      summary: List compliance frameworks and their coverage
+      responses:
+        "200":
+          description: Frameworks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ComplianceFramework"
+
+  /compliance/controls:
+    get:
+      operationId: listControls
+      tags: [compliance]
+      summary: List all compliance controls
+      responses:
+        "200":
+          description: Controls
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ComplianceControl"
+    post:
+      operationId: createControl
+      tags: [compliance]
+      summary: Create a control
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ControlInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceControl"
+
+  /compliance/controls/{id}:
+    patch:
+      operationId: updateControl
+      tags: [compliance]
+      summary: Update a control
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ControlUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ComplianceControl"
+
+  /security/assets:
+    get:
+      operationId: listAssets
+      tags: [security]
+      summary: List all security assets (CAASM)
+      responses:
+        "200":
+          description: Assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SecurityAsset"
+
+  /security/findings:
+    get:
+      operationId: listFindings
+      tags: [security]
+      summary: List CSPM/SSPM findings
+      responses:
+        "200":
+          description: Findings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SecurityFinding"
+
+  /privacy/dsars:
+    get:
+      operationId: listDsars
+      tags: [privacy]
+      summary: List Data Subject Access Requests
+      responses:
+        "200":
+          description: DSARs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dsar"
+    post:
+      operationId: createDsar
+      tags: [privacy]
+      summary: Create a DSAR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DsarInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dsar"
+
+  /privacy/dsars/{id}:
+    patch:
+      operationId: updateDsar
+      tags: [privacy]
+      summary: Update a DSAR
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DsarUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dsar"
+
+  /privacy/dpias:
+    get:
+      operationId: listDpias
+      tags: [privacy]
+      summary: List DPIAs
+      responses:
+        "200":
+          description: DPIAs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dpia"
+    post:
+      operationId: createDpia
+      tags: [privacy]
+      summary: Create a DPIA
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DpiaInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dpia"
+
+  /tickets:
+    get:
+      operationId: listTickets
+      tags: [tickets]
+      summary: List all service desk tickets
+      responses:
+        "200":
+          description: Tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+    post:
+      operationId: createTicket
+      tags: [tickets]
+      summary: Create a ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  /tickets/{id}:
+    get:
+      operationId: getTicket
+      tags: [tickets]
+      summary: Get a ticket
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+    patch:
+      operationId: updateTicket
+      tags: [tickets]
+      summary: Update a ticket
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+
+    ApiError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    SuccessResult:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResult:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+        mfaRequired:
+          type: ["boolean", "null"]
+
+    MfaSetup:
+      type: object
+      required: [secret, qrCodeUrl, backupCodes]
+      properties:
+        secret:
+          type: string
+        qrCodeUrl:
+          type: string
+        backupCodes:
+          type: array
+          items:
+            type: string
+
+    MfaVerifyInput:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+        tempToken:
+          type: ["string", "null"]
+
+    User:
+      type: object
+      required: [id, email, name, role, tenantId, mfaEnabled, createdAt]
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        tenantId:
+          type: integer
+        mfaEnabled:
+          type: boolean
+        lastLogin:
+          type: ["string", "null"]
+        avatar:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    UserInput:
+      type: object
+      required: [email, name, role, password]
+      properties:
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+        password:
+          type: string
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+        email:
+          type: string
+
+    Tenant:
+      type: object
+      required: [id, name, slug, plan, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        domain:
+          type: ["string", "null"]
+        plan:
+          type: string
+        userCount:
+          type: ["integer", "null"]
+        createdAt:
+          type: string
+
+    TenantInput:
+      type: object
+      required: [name, slug, plan]
+      properties:
+        name:
+          type: string
+        slug:
+          type: string
+        domain:
+          type: string
+        plan:
+          type: string
+
+    TenantUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        domain:
+          type: string
+        plan:
+          type: string
+
+    KpiCard:
+      type: object
+      required: [id, label, value, unit, delta, up]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        value:
+          type: number
+        unit:
+          type: string
+        delta:
+          type: string
+        up:
+          type: boolean
+
+    DashboardKpis:
+      type: object
+      required: [kpis, riskSegments, frameworkCoverage]
+      properties:
+        kpis:
+          type: array
+          items:
+            $ref: "#/components/schemas/KpiCard"
+        riskSegments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RiskSegment"
+        frameworkCoverage:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComplianceFramework"
+
+    RiskSegment:
+      type: object
+      required: [label, count, pct, color]
+      properties:
+        label:
+          type: string
+        count:
+          type: integer
+        pct:
+          type: number
+        color:
+          type: string
+
+    ActivityItem:
+      type: object
+      required: [id, module, text, time, type]
+      properties:
+        id:
+          type: string
+        module:
+          type: string
+        text:
+          type: string
+        time:
+          type: string
+        type:
+          type: string
+        dot:
+          type: ["string", "null"]
+
+    Risk:
+      type: object
+      required: [id, riskId, severity, name, category, score, owner, ownerFull, trend, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        riskId:
+          type: string
+        severity:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: ["string", "null"]
+        score:
+          type: number
+        owner:
+          type: string
+        ownerFull:
+          type: string
+        trend:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    RiskInput:
+      type: object
+      required: [severity, name, category, score, owner, ownerFull]
+      properties:
+        severity:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        score:
+          type: number
+        owner:
+          type: string
+        ownerFull:
+          type: string
+
+    RiskUpdate:
+      type: object
+      properties:
+        severity:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        score:
+          type: number
+        owner:
+          type: string
+        ownerFull:
+          type: string
+        trend:
+          type: string
+        status:
+          type: string
+
+    ComplianceFramework:
+      type: object
+      required: [id, name, pct, trend, color]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        pct:
+          type: integer
+        trend:
+          type: string
+        color:
+          type: string
+
+    ComplianceControl:
+      type: object
+      required: [id, controlId, framework, domain, name, status, owner, evidence, dueDate]
+      properties:
+        id:
+          type: integer
+        controlId:
+          type: string
+        framework:
+          type: string
+        domain:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        owner:
+          type: string
+        evidence:
+          type: integer
+        dueDate:
+          type: string
+
+    ControlInput:
+      type: object
+      required: [controlId, framework, domain, name, status, owner, dueDate]
+      properties:
+        controlId:
+          type: string
+        framework:
+          type: string
+        domain:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+        owner:
+          type: string
+        dueDate:
+          type: string
+
+    ControlUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        owner:
+          type: string
+        evidence:
+          type: integer
+        dueDate:
+          type: string
+
+    SecurityAsset:
+      type: object
+      required: [id, type, count, newCount, status]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        count:
+          type: integer
+        newCount:
+          type: integer
+        status:
+          type: string
+        color:
+          type: string
+
+    SecurityFinding:
+      type: object
+      required: [id, findingId, cloud, severity, title, resource, status]
+      properties:
+        id:
+          type: integer
+        findingId:
+          type: string
+        cloud:
+          type: string
+        severity:
+          type: string
+        title:
+          type: string
+        resource:
+          type: string
+        status:
+          type: string
+
+    Dsar:
+      type: object
+      required: [id, dsarId, type, subject, received, due, status]
+      properties:
+        id:
+          type: integer
+        dsarId:
+          type: string
+        type:
+          type: string
+        subject:
+          type: string
+        received:
+          type: string
+        due:
+          type: string
+        status:
+          type: string
+        daysLeft:
+          type: ["integer", "null"]
+
+    DsarInput:
+      type: object
+      required: [type, subject, due]
+      properties:
+        type:
+          type: string
+        subject:
+          type: string
+        due:
+          type: string
+
+    DsarUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        daysLeft:
+          type: integer
+
+    Dpia:
+      type: object
+      required: [id, dpiaId, name, risk, status, owner, updated]
+      properties:
+        id:
+          type: integer
+        dpiaId:
+          type: string
+        name:
+          type: string
+        risk:
+          type: string
+        status:
+          type: string
+        owner:
+          type: string
+        updated:
+          type: string
+
+    DpiaInput:
+      type: object
+      required: [name, risk, owner]
+      properties:
+        name:
+          type: string
+        risk:
+          type: string
+        owner:
+          type: string
+
+    Ticket:
+      type: object
+      required: [id, ticketId, priority, title, category, assignee, status, sla, createdAt]
+      properties:
+        id:
+          type: integer
+        ticketId:
+          type: string
+        priority:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        assignee:
+          type: string
+        status:
+          type: string
+        sla:
+          type: string
+        createdAt:
+          type: string
+
+    TicketInput:
+      type: object
+      required: [priority, title, category, assignee, sla]
+      properties:
+        priority:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        assignee:
+          type: string
+        sla:
+          type: string
+
+    TicketUpdate:
+      type: object
+      properties:
+        priority:
+          type: string
+        title:
+          type: string
+        status:
+          type: string
+        assignee:
+          type: string

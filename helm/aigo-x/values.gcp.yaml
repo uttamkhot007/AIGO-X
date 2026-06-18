@@ -1,0 +1,48 @@
+# ── GCP cloud overlay ──────────────────────────────────────────────────────
+# Applied on top of values.prod.yaml when deploying to GKE.
+# Injected by gcp/deploy.sh via: -f values.gcp.yaml
+# Dynamic values (endpoints, registry) are passed via --set flags in deploy.sh.
+
+global:
+  cloud: gcp
+  # imageRegistry and imageTag are set via --set in deploy.sh
+
+# Disable Helm-managed secret creation.
+# aigo-x-secrets is created by gcp/deploy.sh (kubectl apply) from Secret Manager
+# values fetched via Workload Identity — Helm must not create/overwrite it.
+secrets:
+  create: false
+
+# Disable in-chart PostgreSQL (use Cloud SQL via Auth Proxy sidecar)
+postgres:
+  enabled: false
+
+# Disable in-chart Redis (use Memorystore)
+redis:
+  enabled: false
+
+# ── Cloud SQL Auth Proxy sidecar ──────────────────────────────────────────────
+# Each service pod runs a Cloud SQL Auth Proxy sidecar that authenticates
+# via Workload Identity and provides a local TCP proxy to Cloud SQL.
+cloudsqlProxy:
+  enabled: true
+  # connectionName set via --set-string cloudsqlProxy.connectionName=... in deploy.sh
+  connectionName: ""
+  port: 5432
+
+# ── Secret Manager via Workload Identity ──────────────────────────────────────
+# Pods use the GCP Workload Identity SA to call Secret Manager directly via
+# the secret-manager-client init container or the application SDK.
+# Secrets are exposed as environment variables using External Secrets Operator
+# or direct Secret Manager API calls in app startup code.
+#
+# Alternative: use the Secret Manager add-on for GKE Autopilot.
+workloadIdentity:
+  enabled: true
+  # serviceAccountEmail set via --set-string workloadIdentity.serviceAccountEmail=... in deploy.sh
+  serviceAccountEmail: ""
+
+# K8s ServiceAccount annotations for Workload Identity binding
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: ""  # set via --set in deploy.sh

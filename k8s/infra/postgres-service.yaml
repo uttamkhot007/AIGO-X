@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aigo-x-postgres
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: aigo-x
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - name: postgresql
+      port: 5432
+      targetPort: postgresql
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-headless
+  namespace: aigo-x
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: postgres
+  ports:
+    - port: 5432
+      targetPort: postgresql

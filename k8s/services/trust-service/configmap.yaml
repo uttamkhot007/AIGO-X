@@ -1,0 +1,15 @@
+# k8s/services/trust-service/configmap.yaml
+# Non-sensitive config. Sensitive values (DATABASE_URL, JWT_SECRET, etc.)
+# must come from the Secret "aigo-x-secrets" (see k8s/secrets-template.yaml).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: trust-service-config
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: trust-service
+    app.kubernetes.io/part-of: aigo-x
+data:
+  NODE_ENV: "production"
+  PORT: "8009"
+  REDIS_URL: "redis://:CHANGEME@aigo-x-redis:6379"

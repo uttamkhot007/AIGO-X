@@ -1,0 +1,35 @@
+replicaCount: 2
+
+image:
+  repository: dufense/grc-platform
+  pullPolicy: IfNotPresent
+  tag: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+  host: ""
+  tlsSecretName: aigo-x-tls
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+
+global:
+  secretName: aigo-x-secrets

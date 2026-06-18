@@ -1,0 +1,36 @@
+registration:
+  admin_panel_url: "https://your-grc-shield.company.com"
+  agent_token: "grc_agent_xxxxxxxx_yyyyyyyy"
+  tenant_id: ""
+  auto_register: true
+
+agent:
+  name: "grc-agent"
+  version: "2.0.0"
+  heartbeat_interval: 300
+  collection_interval: 900
+  log_level: "info"
+  log_json: false
+  environment: "production"
+
+store:
+  path: "/var/lib/grc-agent/cache.db"
+
+offline:
+  encrypt: true
+  max_buffered_payloads: 100
+  max_age_hours: 168
+
+capabilities:
+  # Set to false for least-privilege (observability-only) mode.
+  # When false, the agent skips all system-modifying operations.
+  auto_remediate: true
+  system_hardening: true
+
+vault:
+  enabled: false
+  address: ""
+  role_id: ""
+  secret_id: ""
+  token: ""
+  mount_path: "secret"

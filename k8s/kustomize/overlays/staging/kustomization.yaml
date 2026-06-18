@@ -1,0 +1,55 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aigo-x
+
+resources:
+  - ../../base
+
+# Staging: 1 replica per service, reduced resource limits
+patches:
+  - path: replica-patch.yaml
+    target:
+      kind: Deployment
+  # JSON 6902 patch targeting containers[0] by index (avoids strategic-merge name issue)
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 75m
+            memory: 192Mi
+          limits:
+            cpu: 400m
+            memory: 384Mi
+
+images:
+  - name: dufense/gateway
+    newTag: staging
+  - name: dufense/auth-service
+    newTag: staging
+  - name: dufense/risk-service
+    newTag: staging
+  - name: dufense/compliance-service
+    newTag: staging
+  - name: dufense/governance-service
+    newTag: staging
+  - name: dufense/privacy-service
+    newTag: staging
+  - name: dufense/evidence-service
+    newTag: staging
+  - name: dufense/secops-service
+    newTag: staging
+  - name: dufense/ai-service
+    newTag: staging
+  - name: dufense/trust-service
+    newTag: staging
+  - name: dufense/integration-service
+    newTag: staging
+  - name: dufense/grc-platform
+    newTag: staging
+
+commonLabels:
+  environment: staging

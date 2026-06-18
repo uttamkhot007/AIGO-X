@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aigo-x
+
+resources:
+  - ../../base
+
+# Dev: 1 replica for all services to save resources
+patches:
+  - path: replica-patch.yaml
+    target:
+      kind: Deployment
+
+# Image tags — set to local or CI-built images for dev
+images:
+  - name: dufense/gateway
+    newTag: dev
+  - name: dufense/auth-service
+    newTag: dev
+  - name: dufense/risk-service
+    newTag: dev
+  - name: dufense/compliance-service
+    newTag: dev
+  - name: dufense/governance-service
+    newTag: dev
+  - name: dufense/privacy-service
+    newTag: dev
+  - name: dufense/evidence-service
+    newTag: dev
+  - name: dufense/secops-service
+    newTag: dev
+  - name: dufense/ai-service
+    newTag: dev
+  - name: dufense/trust-service
+    newTag: dev
+  - name: dufense/integration-service
+    newTag: dev
+  - name: dufense/grc-platform
+    newTag: dev
+
+configMapGenerator:
+  - name: dev-env-overrides
+    literals:
+      - NODE_ENV=development
+
+commonLabels:
+  environment: dev

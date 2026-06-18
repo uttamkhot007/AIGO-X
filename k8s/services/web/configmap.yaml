@@ -1,0 +1,14 @@
+# Web frontend (nginx) has no runtime ENV vars — all config is baked at build time.
+# This ConfigMap exists to satisfy kustomize's base resource list.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: web-config
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: web
+    app.kubernetes.io/part-of: aigo-x
+data:
+  # Nginx-served static build; no runtime ENV needed.
+  # Override nginx config here if required (e.g. custom CSP headers).
+  PLACEHOLDER: "true"

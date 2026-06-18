@@ -1,0 +1,61 @@
+apiVersion: v2
+name: aigo-x
+description: |
+  AIGO-X GRC Platform — Umbrella Helm chart.
+  Installs all 10 domain microservices, the API gateway, web frontend,
+  PostgreSQL, and Redis as a single deployable unit.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - grc
+  - compliance
+  - risk-management
+  - security
+home: https://github.com/dufense/aigo-x
+maintainers:
+  - name: DuFense Engineering
+    email: engineering@dufense.io
+dependencies:
+  - name: gateway
+    version: "1.0.0"
+    repository: "file://../charts/gateway"
+  - name: auth-service
+    version: "1.0.0"
+    repository: "file://../charts/auth-service"
+  - name: risk-service
+    version: "1.0.0"
+    repository: "file://../charts/risk-service"
+  - name: compliance-service
+    version: "1.0.0"
+    repository: "file://../charts/compliance-service"
+  - name: governance-service
+    version: "1.0.0"
+    repository: "file://../charts/governance-service"
+  - name: privacy-service
+    version: "1.0.0"
+    repository: "file://../charts/privacy-service"
+  - name: evidence-service
+    version: "1.0.0"
+    repository: "file://../charts/evidence-service"
+  - name: secops-service
+    version: "1.0.0"
+    repository: "file://../charts/secops-service"
+  - name: ai-service
+    version: "1.0.0"
+    repository: "file://../charts/ai-service"
+  - name: trust-service
+    version: "1.0.0"
+    repository: "file://../charts/trust-service"
+  - name: integration-service
+    version: "1.0.0"
+    repository: "file://../charts/integration-service"
+  - name: web
+    version: "1.0.0"
+    repository: "file://../charts/web"
+  - name: postgres
+    version: "1.0.0"
+    repository: "file://../charts/postgres"
+  - name: redis
+    version: "1.0.0"
+    repository: "file://../charts/redis"

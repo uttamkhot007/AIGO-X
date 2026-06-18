@@ -1,0 +1,57 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aigo-x
+
+resources:
+  - ../../base
+
+# Production: higher replicas, full resources, HPA enabled
+patches:
+  # Replica count — strategic merge is safe here (replicas is not in a named list)
+  - path: replica-patch.yaml
+    target:
+      kind: Deployment
+  # Resource limits — use JSON 6902 to target containers[0] by index,
+  # avoiding the strategic-merge container name-matching pitfall.
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/containers/0/resources
+        value:
+          requests:
+            cpu: 150m
+            memory: 256Mi
+          limits:
+            cpu: 750m
+            memory: 512Mi
+
+images:
+  - name: dufense/gateway
+    newTag: "1.0.0"
+  - name: dufense/auth-service
+    newTag: "1.0.0"
+  - name: dufense/risk-service
+    newTag: "1.0.0"
+  - name: dufense/compliance-service
+    newTag: "1.0.0"
+  - name: dufense/governance-service
+    newTag: "1.0.0"
+  - name: dufense/privacy-service
+    newTag: "1.0.0"
+  - name: dufense/evidence-service
+    newTag: "1.0.0"
+  - name: dufense/secops-service
+    newTag: "1.0.0"
+  - name: dufense/ai-service
+    newTag: "1.0.0"
+  - name: dufense/trust-service
+    newTag: "1.0.0"
+  - name: dufense/integration-service
+    newTag: "1.0.0"
+  - name: dufense/grc-platform
+    newTag: "1.0.0"
+
+commonLabels:
+  environment: prod

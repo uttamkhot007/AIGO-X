@@ -1,0 +1,116 @@
+[package]
+name = "grc-agent"
+version = "2.2.1"
+edition = "2021"
+authors = ["AIGO-X Development Team"]
+description = "AIGO-X Production Rust Endpoint Agent — self-healing, adaptive, lightweight"
+license = "MIT"
+repository = "https://github.com/grcshield/grc-agent"
+default-run = "grc-agent"
+
+[[bin]]
+name = "grc-agent"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# Async utilities (parallel futures)
+futures = "0.3"
+
+# HTTP client
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+
+# Error handling
+anyhow = "1"
+thiserror = "1"
+
+# Logging / tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# UUID generation
+uuid = { version = "1", features = ["v4"] }
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# SQLite offline store (pure-Rust, no system sqlite required)
+rusqlite = { version = "0.31", features = ["bundled"] }
+
+# AES-256-GCM encryption for offline payload blobs (key derived from registration token)
+aes-gcm = "0.10"
+rand = "0.8"
+
+# System info collection
+sysinfo = "0.30"
+
+# Cross-platform data directories (for FIM baseline storage)
+dirs = "5"
+
+# Config parsing
+config = { version = "0.14", features = ["yaml"] }
+
+# SHA-256 for token hashing and delta detection
+sha2 = "0.10"
+hex = "0.4"
+
+# HMAC-SHA256 for payload cryptographic integrity (CQ-004 / AE-001)
+hmac = "0.12"
+
+# Ed25519 signature verification for self-updater binary integrity
+ed25519-dalek = { version = "2", features = ["digest"] }
+
+# Cross-platform secure key storage and HKDF key derivation
+keyring = "3"
+hkdf = "0.12"
+
+# Secure password prompt (masks input in TTY)
+rpassword = "7"
+
+# Argon2id password hashing for uninstall verification
+argon2 = "0.5"
+
+# Hostname resolution
+hostname = "0.3"
+
+# Network interface enumeration (replaces UDP probes in air-gapped networks)
+local-ip-address = "0.5"
+
+# TLS handshake for version detection
+rustls = { version = "0.21", default-features = false }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+# Linux-specific: read /proc for port enumeration (no extra crate needed)
+
+[target.'cfg(windows)'.dependencies]
+# Windows-specific additions (no extra crates needed; we use std Command wrappers)
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+split-debuginfo = "off"
+
+[profile.release-min]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"
+
+[profile.dev]
+opt-level = 0
+debug = true

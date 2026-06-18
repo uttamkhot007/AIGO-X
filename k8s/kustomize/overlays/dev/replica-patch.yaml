@@ -1,0 +1,7 @@
+# Reduce replicas to 1 for all Deployments in dev
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: placeholder   # kustomize target selector overrides this
+spec:
+  replicas: 1

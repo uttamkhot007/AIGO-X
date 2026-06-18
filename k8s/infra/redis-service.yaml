@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aigo-x-redis
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: aigo-x
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: redis
+      protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-headless
+  namespace: aigo-x
+spec:
+  type: ClusterIP
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: redis
+  ports:
+    - port: 6379
+      targetPort: redis

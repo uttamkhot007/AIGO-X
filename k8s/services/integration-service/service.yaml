@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: integration-service
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: integration-service
+    app.kubernetes.io/part-of: aigo-x
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: integration-service
+  ports:
+    - name: http
+      port: 8010
+      targetPort: http
+      protocol: TCP

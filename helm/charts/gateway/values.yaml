@@ -1,0 +1,56 @@
+replicaCount: 2
+
+image:
+  repository: dufense/gateway
+  pullPolicy: IfNotPresent
+  tag: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 8
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: SAMEORIGIN";
+      more_set_headers "X-Content-Type-Options: nosniff";
+  host: ""         # set in values.prod.yaml / values.dev.yaml
+  tlsSecretName: aigo-x-tls
+
+resources:
+  requests:
+    cpu: 200m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+global:
+  secretName: aigo-x-secrets
+  nodeEnv: production
+  redisUrl: "redis://:changeme@aigo-x-redis-master:6379"
+
+# Service URLs injected as ConfigMap data (override in env-specific values)
+serviceUrls:
+  auth:        "http://aigo-x-auth-service:8001"
+  risk:        "http://aigo-x-risk-service:8002"
+  compliance:  "http://aigo-x-compliance-service:8003"
+  governance:  "http://aigo-x-governance-service:8004"
+  privacy:     "http://aigo-x-privacy-service:8005"
+  evidence:    "http://aigo-x-evidence-service:8006"
+  secops:      "http://aigo-x-secops-service:8007"
+  ai:          "http://aigo-x-ai-service:8008"
+  trust:       "http://aigo-x-trust-service:8009"
+  integration: "http://aigo-x-integration-service:8010"

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-config
+  namespace: {{ .Release.Namespace }}
+data:
+  NODE_ENV: {{ .Values.global.nodeEnv | default "production" | quote }}
+  PORT: {{ .Values.service.port | quote }}
+  REDIS_URL: {{ .Values.global.redisUrl | quote }}
+  AUTH_SERVICE_URL:        {{ .Values.serviceUrls.auth | quote }}
+  RISK_SERVICE_URL:        {{ .Values.serviceUrls.risk | quote }}
+  COMPLIANCE_SERVICE_URL:  {{ .Values.serviceUrls.compliance | quote }}
+  GOVERNANCE_SERVICE_URL:  {{ .Values.serviceUrls.governance | quote }}
+  PRIVACY_SERVICE_URL:     {{ .Values.serviceUrls.privacy | quote }}
+  EVIDENCE_SERVICE_URL:    {{ .Values.serviceUrls.evidence | quote }}
+  SECOPS_SERVICE_URL:      {{ .Values.serviceUrls.secops | quote }}
+  AI_SERVICE_URL:          {{ .Values.serviceUrls.ai | quote }}
+  TRUST_SERVICE_URL:       {{ .Values.serviceUrls.trust | quote }}
+  INTEGRATION_SERVICE_URL: {{ .Values.serviceUrls.integration | quote }}

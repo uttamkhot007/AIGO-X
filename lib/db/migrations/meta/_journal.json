@@ -1,0 +1,125 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1749000000000,
+      "tag": "0000_slow_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1749100000000,
+      "tag": "0001_wise_star_brand",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1749200000000,
+      "tag": "0002_tough_abomination",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1749300000000,
+      "tag": "0003_clean_carnage",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1750000000000,
+      "tag": "0004_controls_unique",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1750010000000,
+      "tag": "0005_evidence_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1750020000000,
+      "tag": "0006_framework_library",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1750030000000,
+      "tag": "0007_browser_checks",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1750040000000,
+      "tag": "0008_mcp_audit_log",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1750050000000,
+      "tag": "0009_trust_center_configs",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1750060000000,
+      "tag": "0010_trust_center_access_requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1750070000000,
+      "tag": "0011_browser_check_alerts",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1750080000000,
+      "tag": "0012_agent_refresh_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1750090000000,
+      "tag": "0013_tenant_module_licenses",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1750100000000,
+      "tag": "0014_tml_framework_ids_int_array",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1750110000000,
+      "tag": "0015_agent_records_secrets",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1750120000000,
+      "tag": "0016_sla_records",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+replicaCount: 2
+
+image:
+  repository: dufense/ai-service
+  pullPolicy: IfNotPresent
+  tag: ""
+
+service:
+  type: ClusterIP
+  port: 8008
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+global:
+  secretName: aigo-x-secrets
+  nodeEnv: production
+  redisUrl: "redis://:changeme@aigo-x-redis-master:6379"
+
+# OPENAI_API_KEY is provided via the shared aigo-x-secrets Secret (OPENAI_API_KEY key).
+# Use extraEnv to inject additional AI-specific env vars if needed.
+extraEnv: []
+configData: {}

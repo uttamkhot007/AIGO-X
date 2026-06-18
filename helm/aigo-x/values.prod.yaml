@@ -1,0 +1,275 @@
+# ── AIGO-X GRC Platform — Production Helm Values ──────────────────────────────
+#
+# Quick-start (bootstrap):
+#   helm upgrade --install aigo-x ./helm/aigo-x \
+#     -f helm/aigo-x/values.prod.yaml \
+#     --set secrets.databaseUrl="postgresql://grc_user:PASS@your-db:5432/dufense_grc" \
+#     --set secrets.jwtSecret="$(openssl rand -hex 32)" \
+#     --set secrets.redisPassword="$(openssl rand -hex 16)" \
+#     --set secrets.postgresPassword="$(openssl rand -hex 16)" \
+#     --set secrets.tokenEncryptionKey="$(openssl rand -hex 16)" \
+#     --set gateway.ingress.host="grc.example.com" \
+#     --set web.ingress.host="grc.example.com"
+#
+# For CI/CD pipelines use scripts/k8s-deploy.sh --env prod --version 1.x.y
+#
+# TLS: pre-create a cert-manager ClusterIssuer and set ingress.tlsSecretName,
+#      or use an External Secrets Operator to sync a managed cert.
+#
+# For production, prefer a managed PostgreSQL (RDS / Cloud SQL / Azure DB).
+# Set secrets.databaseUrl to the managed DB URL and postgres.enabled: false.
+# ──────────────────────────────────────────────────────────────────────────────
+
+createNamespace: true
+
+# secrets.create: true — the chart creates the aigo-x-secrets Secret.
+# In mature GitOps setups replace with External Secrets Operator and set false.
+secrets:
+  create: true
+  # Supply actual values via --set flags shown above, or via CI env vars.
+  # Placeholder values below allow `helm template` to validate the chart
+  # without real credentials; deploying with placeholders will cause pods to
+  # crash-loop on DB connection — always override before going live.
+  databaseUrl: "postgresql://grc_user:CHANGEME@aigo-x-postgres:5432/dufense_grc"
+  jwtSecret: "CHANGEME-min-32-chars-replace-before-prod-xxxxxx"
+  redisPassword: "CHANGEME-redis"
+  postgresPassword: "CHANGEME-postgres"
+  tokenEncryptionKey: "CHANGEME-32-char-token-key-xxxxxxxx"
+  openaiApiKey: ""
+
+global:
+  nodeEnv: production
+  redisUrl: "redis://:CHANGEME-redis@aigo-x-redis:6379"
+
+# ── Gateway ────────────────────────────────────────────────────────────────────
+gateway:
+  replicaCount: 3
+  image:
+    tag: "1.0.0"
+  ingress:
+    enabled: true
+    className: nginx
+    host: "grc.example.com"      # override with --set gateway.ingress.host=...
+    tlsSecretName: aigo-x-tls
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-buffering: "off"
+      nginx.ingress.kubernetes.io/limit-rps: "200"
+      nginx.ingress.kubernetes.io/limit-connections: "50"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 12
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+web:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  ingress:
+    enabled: true
+    className: nginx
+    host: "grc.example.com"      # override with --set web.ingress.host=...
+    tlsSecretName: aigo-x-tls
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+
+# ── Domain services — production sizing ────────────────────────────────────────
+auth-service:
+  replicaCount: 3
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 3
+    maxReplicas: 10
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 750m
+      memory: 512Mi
+
+risk-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 750m
+      memory: 512Mi
+
+compliance-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 750m
+      memory: 512Mi
+
+governance-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 750m
+      memory: 512Mi
+
+privacy-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+evidence-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 750m
+      memory: 512Mi
+
+secops-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+  resources:
+    requests:
+      cpu: 200m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 512Mi
+
+ai-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1500m
+      memory: 1Gi
+
+trust-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+integration-service:
+  replicaCount: 2
+  image:
+    tag: "1.0.0"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 750m
+      memory: 512Mi
+
+# ── PostgreSQL — for production prefer a managed DB (RDS / Cloud SQL / Azure DB) ──
+postgres:
+  persistence:
+    enabled: true
+    size: 100Gi
+    storageClass: "gp3"   # AWS EKS; change for AKS (managed-premium) / GKE (pd-ssd)
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 4000m
+      memory: 4Gi
+
+# ── Redis ──────────────────────────────────────────────────────────────────────
+redis:
+  persistence:
+    enabled: true
+    size: 16Gi
+    storageClass: "gp3"
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi

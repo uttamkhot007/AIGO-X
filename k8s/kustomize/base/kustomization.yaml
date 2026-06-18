@@ -1,0 +1,65 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: aigo-x
+
+resources:
+  - ../../namespace.yaml
+  - ../../ingress.yaml
+  # ── Infra ──
+  - ../../infra/postgres-statefulset.yaml
+  - ../../infra/postgres-service.yaml
+  - ../../infra/redis-statefulset.yaml
+  - ../../infra/redis-service.yaml
+  # ── Services ──
+  - ../../services/gateway/deployment.yaml
+  - ../../services/gateway/service.yaml
+  - ../../services/gateway/configmap.yaml
+  - ../../services/gateway/hpa.yaml
+  - ../../services/auth-service/deployment.yaml
+  - ../../services/auth-service/service.yaml
+  - ../../services/auth-service/configmap.yaml
+  - ../../services/auth-service/hpa.yaml
+  - ../../services/risk-service/deployment.yaml
+  - ../../services/risk-service/service.yaml
+  - ../../services/risk-service/configmap.yaml
+  - ../../services/risk-service/hpa.yaml
+  - ../../services/compliance-service/deployment.yaml
+  - ../../services/compliance-service/service.yaml
+  - ../../services/compliance-service/configmap.yaml
+  - ../../services/compliance-service/hpa.yaml
+  - ../../services/governance-service/deployment.yaml
+  - ../../services/governance-service/service.yaml
+  - ../../services/governance-service/configmap.yaml
+  - ../../services/governance-service/hpa.yaml
+  - ../../services/privacy-service/deployment.yaml
+  - ../../services/privacy-service/service.yaml
+  - ../../services/privacy-service/configmap.yaml
+  - ../../services/privacy-service/hpa.yaml
+  - ../../services/evidence-service/deployment.yaml
+  - ../../services/evidence-service/service.yaml
+  - ../../services/evidence-service/configmap.yaml
+  - ../../services/evidence-service/hpa.yaml
+  - ../../services/secops-service/deployment.yaml
+  - ../../services/secops-service/service.yaml
+  - ../../services/secops-service/configmap.yaml
+  - ../../services/secops-service/hpa.yaml
+  - ../../services/ai-service/deployment.yaml
+  - ../../services/ai-service/service.yaml
+  - ../../services/ai-service/configmap.yaml
+  - ../../services/ai-service/hpa.yaml
+  - ../../services/trust-service/deployment.yaml
+  - ../../services/trust-service/service.yaml
+  - ../../services/trust-service/configmap.yaml
+  - ../../services/trust-service/hpa.yaml
+  - ../../services/integration-service/deployment.yaml
+  - ../../services/integration-service/service.yaml
+  - ../../services/integration-service/configmap.yaml
+  - ../../services/integration-service/hpa.yaml
+  - ../../services/web/deployment.yaml
+  - ../../services/web/service.yaml
+  - ../../services/web/configmap.yaml
+  - ../../services/web/hpa.yaml
+
+commonLabels:
+  app.kubernetes.io/part-of: aigo-x

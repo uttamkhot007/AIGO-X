@@ -1,0 +1,194 @@
+# ── AIGO-X GRC Platform — Staging values ──────────────────────────────────────
+# Usage:
+#   ./scripts/k8s-deploy.sh --env staging --version 1.2.3
+#   or:
+#   helm upgrade --install aigo-x ./helm/aigo-x \
+#     -f helm/aigo-x/values.staging.yaml \
+#     --set secrets.databaseUrl="$DATABASE_URL" ...
+#
+# Staging mirrors prod structure but runs at minimal replica counts to reduce cost.
+# ──────────────────────────────────────────────────────────────────────────────
+
+createNamespace: true
+
+# Provide secrets the same way as prod (env vars / External Secrets Operator).
+# For staging CI, set create: true and inject via environment variables.
+secrets:
+  create: false
+
+global:
+  nodeEnv: staging
+
+# ── Gateway ────────────────────────────────────────────────────────────────────
+gateway:
+  replicaCount: 1
+  ingress:
+    host: ""     # set with --set gateway.ingress.host=staging.grc.example.com
+    tlsSecretName: aigo-x-tls-staging
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-buffering: "off"
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 192Mi
+    limits:
+      cpu: 500m
+      memory: 384Mi
+
+web:
+  replicaCount: 1
+  ingress:
+    host: ""
+    tlsSecretName: aigo-x-tls-staging
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+  autoscaling:
+    enabled: false
+
+# ── Domain services — 1 replica each, reduced resources ───────────────────────
+auth-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+risk-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+compliance-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+governance-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+privacy-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+evidence-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+secops-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+ai-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 750m
+      memory: 512Mi
+
+trust-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+integration-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 75m
+      memory: 192Mi
+    limits:
+      cpu: 400m
+      memory: 384Mi
+
+# ── Postgres / Redis — smaller for staging ─────────────────────────────────────
+postgres:
+  persistence:
+    size: 10Gi
+  resources:
+    requests:
+      cpu: 150m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+redis:
+  persistence:
+    size: 2Gi
+  resources:
+    requests:
+      cpu: 75m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi

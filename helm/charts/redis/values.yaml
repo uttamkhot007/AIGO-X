@@ -1,0 +1,28 @@
+image:
+  repository: redis
+  tag: "7-alpine"
+  pullPolicy: IfNotPresent
+
+auth:
+  # password comes from aigo-x-secrets → REDIS_PASSWORD
+
+persistence:
+  enabled: true
+  storageClass: ""
+  size: 4Gi
+  accessMode: ReadWriteOnce
+
+service:
+  type: ClusterIP
+  port: 6379
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+global:
+  secretName: aigo-x-secrets

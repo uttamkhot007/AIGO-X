@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: risk-service
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: risk-service
+    app.kubernetes.io/part-of: aigo-x
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: risk-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: risk-service
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: risk-service
+          image: dufense/risk-service:1.0.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8002
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: risk-service-config
+            - secretRef:
+                name: aigo-x-secrets
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi

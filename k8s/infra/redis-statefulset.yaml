@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: aigo-x
+spec:
+  serviceName: redis-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command:
+            - redis-server
+            - --requirepass
+            - $(REDIS_PASSWORD)
+            - --appendonly
+            - "yes"
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: aigo-x-secrets
+                  key: REDIS_PASSWORD
+          livenessProbe:
+            exec:
+              # Shell wrapper required: exec probes are NOT shell-expanded by kubelet.
+              # $REDIS_PASSWORD is expanded by /bin/sh from the container environment.
+              command: ["/bin/sh", "-c", "redis-cli -a \"$REDIS_PASSWORD\" ping"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command: ["/bin/sh", "-c", "redis-cli -a \"$REDIS_PASSWORD\" ping"]
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 4Gi

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-postgres
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  serviceName: {{ .Release.Name }}-postgres-headless
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: postgresql
+              containerPort: 5432
+              protocol: TCP
+          env:
+            - name: POSTGRES_DB
+              value: {{ .Values.auth.database | quote }}
+            - name: POSTGRES_USER
+              value: {{ .Values.auth.username | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.secretName }}
+                  key: POSTGRES_PASSWORD
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U {{ .Values.auth.username }} -d {{ .Values.auth.database }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U {{ .Values.auth.username }} -d {{ .Values.auth.database }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - {{ .Values.persistence.accessMode }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+        {{- if .Values.persistence.storageClass }}
+        storageClassName: {{ .Values.persistence.storageClass }}
+        {{- end }}

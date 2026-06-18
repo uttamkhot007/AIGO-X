@@ -1,0 +1,186 @@
+# ── AIGO-X GRC Platform — Local dev values (kind / minikube) ──────────────────
+# Usage:
+#   helm install aigo-x ./helm/aigo-x -f helm/aigo-x/values.dev.yaml
+# Assumes kind cluster with nginx-ingress-controller.
+# ──────────────────────────────────────────────────────────────────────────────
+
+createNamespace: true
+
+secrets:
+  create: true
+  databaseUrl: "postgresql://grc_user:devpassword@aigo-x-postgres:5432/dufense_grc"
+  jwtSecret: "dev-jwt-secret-change-in-prod-min-32-chars"
+  redisPassword: "devredis"
+  postgresPassword: "devpassword"
+  tokenEncryptionKey: "dev-encryption-key-32-chars-xxxx"
+  openaiApiKey: ""
+
+global:
+  nodeEnv: development
+  redisUrl: "redis://:devredis@aigo-x-redis:6379"
+
+# ── Gateway (1 replica for dev) ────────────────────────────────────────────────
+gateway:
+  replicaCount: 1
+  ingress:
+    host: "aigo-x.local"
+    tlsSecretName: ""
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-buffering: "off"
+  autoscaling:
+    enabled: false
+
+web:
+  replicaCount: 1
+  ingress:
+    host: "aigo-x.local"
+    tlsSecretName: ""
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+  autoscaling:
+    enabled: false
+
+# ── 1 replica per service in dev ──────────────────────────────────────────────
+auth-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+risk-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+compliance-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+governance-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+privacy-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+evidence-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+secops-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+ai-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+trust-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+integration-service:
+  replicaCount: 1
+  autoscaling:
+    enabled: false
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+postgres:
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+redis:
+  persistence:
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi

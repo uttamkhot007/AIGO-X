@@ -1,0 +1,202 @@
+# ── AIGO-X GRC Platform — Default Helm Values ─────────────────────────────────
+# Override with values.dev.yaml or values.prod.yaml.
+# Usage:
+#   helm install aigo-x ./helm/aigo-x -f helm/aigo-x/values.prod.yaml
+# ──────────────────────────────────────────────────────────────────────────────
+
+createNamespace: false
+
+# ── Secrets bootstrap (set create: true only for initial install / CI) ─────────
+secrets:
+  create: false          # set true only for bootstrap; use External Secrets in prod
+  databaseUrl: ""
+  jwtSecret: ""
+  redisPassword: "changeme"
+  postgresPassword: ""
+  tokenEncryptionKey: ""
+  openaiApiKey: ""
+
+# ── Global values passed to all sub-charts ─────────────────────────────────────
+global:
+  secretName: aigo-x-secrets
+  nodeEnv: production
+  redisUrl: "redis://:changeme@aigo-x-redis:6379"
+
+# ── Gateway ────────────────────────────────────────────────────────────────────
+gateway:
+  replicaCount: 2
+  image:
+    repository: dufense/gateway
+    tag: ""
+  ingress:
+    enabled: true
+    className: nginx
+    host: ""
+    tlsSecretName: aigo-x-tls
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "120"
+      nginx.ingress.kubernetes.io/proxy-buffering: "off"
+  serviceUrls:
+    auth:        "http://aigo-x-auth-service:8001"
+    risk:        "http://aigo-x-risk-service:8002"
+    compliance:  "http://aigo-x-compliance-service:8003"
+    governance:  "http://aigo-x-governance-service:8004"
+    privacy:     "http://aigo-x-privacy-service:8005"
+    evidence:    "http://aigo-x-evidence-service:8006"
+    secops:      "http://aigo-x-secops-service:8007"
+    ai:          "http://aigo-x-ai-service:8008"
+    trust:       "http://aigo-x-trust-service:8009"
+    integration: "http://aigo-x-integration-service:8010"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+
+# ── Web frontend ───────────────────────────────────────────────────────────────
+web:
+  replicaCount: 2
+  image:
+    repository: dufense/grc-platform
+    tag: ""
+  ingress:
+    enabled: true
+    className: nginx
+    host: ""
+    tlsSecretName: aigo-x-tls
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+# ── Domain microservices — shared defaults ──────────────────────────────────────
+auth-service:
+  replicaCount: 2
+  image:
+    repository: dufense/auth-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+
+risk-service:
+  replicaCount: 2
+  image:
+    repository: dufense/risk-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+compliance-service:
+  replicaCount: 2
+  image:
+    repository: dufense/compliance-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+governance-service:
+  replicaCount: 2
+  image:
+    repository: dufense/governance-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+privacy-service:
+  replicaCount: 2
+  image:
+    repository: dufense/privacy-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+evidence-service:
+  replicaCount: 2
+  image:
+    repository: dufense/evidence-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+secops-service:
+  replicaCount: 2
+  image:
+    repository: dufense/secops-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 8
+
+ai-service:
+  replicaCount: 2
+  image:
+    repository: dufense/ai-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+trust-service:
+  replicaCount: 2
+  image:
+    repository: dufense/trust-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+integration-service:
+  replicaCount: 2
+  image:
+    repository: dufense/integration-service
+    tag: ""
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 6
+
+# ── PostgreSQL ─────────────────────────────────────────────────────────────────
+postgres:
+  auth:
+    database: dufense_grc
+    username: grc_user
+  persistence:
+    enabled: true
+    size: 20Gi
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 2000m
+      memory: 2Gi
+
+# ── Redis ──────────────────────────────────────────────────────────────────────
+redis:
+  persistence:
+    enabled: true
+    size: 4Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

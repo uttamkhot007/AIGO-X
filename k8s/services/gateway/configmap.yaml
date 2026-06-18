@@ -1,0 +1,27 @@
+# k8s/services/gateway/configmap.yaml
+# Non-sensitive config. Sensitive values (DATABASE_URL, JWT_SECRET, etc.)
+# must come from the Secret "aigo-x-secrets" (see k8s/secrets-template.yaml).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gateway-config
+  namespace: aigo-x
+  labels:
+    app.kubernetes.io/name: gateway
+    app.kubernetes.io/part-of: aigo-x
+data:
+  NODE_ENV: "production"
+  PORT: "8080"
+  REDIS_URL: "redis://:CHANGEME@aigo-x-redis:6379"
+  AUTH_SERVICE_URL:        "http://auth-service:8001"
+  RISK_SERVICE_URL:        "http://risk-service:8002"
+  COMPLIANCE_SERVICE_URL:  "http://compliance-service:8003"
+  GOVERNANCE_SERVICE_URL:  "http://governance-service:8004"
+  PRIVACY_SERVICE_URL:     "http://privacy-service:8005"
+  EVIDENCE_SERVICE_URL:    "http://evidence-service:8006"
+  SECOPS_SERVICE_URL:      "http://secops-service:8007"
+  AI_SERVICE_URL:          "http://ai-service:8008"
+  TRUST_SERVICE_URL:       "http://trust-service:8009"
+  INTEGRATION_SERVICE_URL: "http://integration-service:8010"
+  DEPLOYMENT_TYPE:         "k8s"
+  TENANT_MODE:             "multi"

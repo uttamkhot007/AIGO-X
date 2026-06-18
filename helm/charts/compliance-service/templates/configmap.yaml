@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-{{ .Chart.Name }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  NODE_ENV: {{ .Values.global.nodeEnv | default "production" | quote }}
+  PORT: {{ .Values.service.port | quote }}
+  REDIS_URL: {{ .Values.global.redisUrl | default "redis://aigo-x-redis:6379" | quote }}
+  {{- with .Values.configData }}
+  {{- toYaml . | nindent 2 }}
+  {{- end }}
