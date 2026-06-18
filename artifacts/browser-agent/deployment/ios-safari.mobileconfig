@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  AIGO-X Browser Agent — iOS/macOS Safari MDM Configuration Profile
+  Deploy via: Jamf Pro, Microsoft Intune, Workspace ONE, Apple Configurator 2
+  Requirements: Supervised iOS 15+ / macOS 12+ device
+  Once pushed, the Safari Web Extension is installed and pinned. Users on supervised
+  devices cannot remove extensions pushed via MDM.
+-->
+<plist version="1.0">
+<dict>
+  <key>PayloadDisplayName</key>
+  <string>AIGO-X Browser Agent</string>
+  <key>PayloadDescription</key>
+  <string>Installs and manages the AIGO-X Browser Agent Safari Web Extension for enterprise AI &amp; SaaS security monitoring.</string>
+  <key>PayloadIdentifier</key>
+  <string>io.aigo-x.browser-agent.mobileconfig</string>
+  <key>PayloadOrganization</key>
+  <string>AIGO-X GRC Platform</string>
+  <key>PayloadType</key>
+  <string>Configuration</string>
+  <key>PayloadUUID</key>
+  <string>A1B2C3D4-E5F6-7890-ABCD-EF1234567890</string>
+  <key>PayloadVersion</key>
+  <integer>1</integer>
+  <key>PayloadRemovalDisallowed</key>
+  <true/>
+  <key>PayloadContent</key>
+  <array>
+    <!-- Safari Web Extension Management -->
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.safari.extension.settings</string>
+      <key>PayloadIdentifier</key>
+      <string>io.aigo-x.browser-agent.extension</string>
+      <key>PayloadUUID</key>
+      <string>B2C3D4E5-F6A7-8901-BCDE-F12345678901</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadDisplayName</key>
+      <string>AIGO-X Safari Extension</string>
+      <key>ExtensionIdentifier</key>
+      <string>io.aigo-x.browser-agent.extension</string>
+      <!-- State 1=On, 0=Off. On supervised devices this is enforced. -->
+      <key>State</key>
+      <integer>1</integer>
+      <key>AllowedDomains</key>
+      <array>
+        <string>*</string>
+      </array>
+      <key>DeniedDomains</key>
+      <array/>
+    </dict>
+    <!-- Managed App Config — pre-configure the extension -->
+    <dict>
+      <key>PayloadType</key>
+      <string>com.apple.managedappconfiguration</string>
+      <key>PayloadIdentifier</key>
+      <string>io.aigo-x.browser-agent.appconfig</string>
+      <key>PayloadUUID</key>
+      <string>C3D4E5F6-A7B8-9012-CDEF-123456789012</string>
+      <key>PayloadVersion</key>
+      <integer>1</integer>
+      <key>PayloadDisplayName</key>
+      <string>AIGO-X Agent App Config</string>
+      <key>AppConfig</key>
+      <dict>
+        <key>apiBase</key>
+        <string>https://YOUR_AIGO_X_DOMAIN/api</string>
+        <key>token</key>
+        <string>YOUR_ENROLL_TOKEN</string>
+        <key>enforced</key>
+        <true/>
+        <key>logAiTools</key>
+        <true/>
+        <key>logShadowIt</key>
+        <true/>
+      </dict>
+    </dict>
+  </array>
+</dict>
+</plist>

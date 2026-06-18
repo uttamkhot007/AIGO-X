@@ -1,0 +1,37 @@
+{
+  "_description": "Firefox Enterprise Policy — Force-install AIGO-X Browser Agent. Deploy via /etc/firefox/policies/policies.json (Linux/macOS) or Windows GPO with Mozilla ADMX template.",
+  "_docs": "https://support.mozilla.org/en-US/products/firefox-enterprise/policies-customization-enterprise",
+
+  "policies": {
+    "Extensions": {
+      "Install": [
+        "__AMO_EXTENSION_URL_OR_SIGNED_XPI_URL__"
+      ],
+      "Locked": [
+        "__EXTENSION_ID__@aigo-x.io"
+      ]
+    },
+
+    "ExtensionSettings": {
+      "__EXTENSION_ID__@aigo-x.io": {
+        "installation_mode": "force_installed",
+        "install_url": "__SIGNED_XPI_URL__",
+        "blocked_install_message": "This extension is managed by your organisation and cannot be removed.",
+        "updates_disabled": false
+      }
+    },
+
+    "_managed_storage": {
+      "_note": "Place this in /etc/firefox/policies/policies.json or the Mozilla ADMX registry path",
+      "ManagedStorage": {
+        "apiBase": "https://YOUR_AIGO_X_DOMAIN/api",
+        "token":   "YOUR_ENROLL_TOKEN",
+        "enforced": true
+      }
+    }
+  },
+
+  "_linux_deploy": "sudo mkdir -p /etc/firefox/policies && sudo cp firefox-enterprise-policy.json /etc/firefox/policies/policies.json",
+  "_macos_deploy": "sudo mkdir -p /Library/Application\\ Support/Mozilla/ManagedStorage && sudo cp firefox-enterprise-policy.json /Library/Application\\ Support/Mozilla/policies.json",
+  "_windows_deploy": "Place policies.json in: C:\\Program Files\\Mozilla Firefox\\distribution\\policies.json"
+}

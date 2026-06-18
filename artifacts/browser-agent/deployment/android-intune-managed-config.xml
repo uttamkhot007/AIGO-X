@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AIGO-X Browser Agent — Android Enterprise Managed Configuration
+  For: Microsoft Intune / Google Workspace (Managed Google Play) / VMware Workspace ONE
+  Target: Chrome for Android (enterprise) on managed Android 8+ devices
+
+  NOTE: Chrome extensions do NOT run on standard Android Chrome.
+  This config deploys AIGO-X monitoring via Android Enterprise App Config,
+  which pre-configures the AIGO-X Native Android App (separate package).
+  For Android, install the AIGO-X Native Agent app via Managed Google Play.
+
+  Alternatively: Android Enterprise Work Profile + Chrome Custom Tabs policy
+  can restrict which URLs users can visit.
+-->
+<managedAppConfiguration>
+  <version>1</version>
+  <bundleId>io.aigo_x.agent.android</bundleId>
+  <dict>
+    <!-- AIGO-X Platform Connection -->
+    <string keyName="apiBase">https://YOUR_AIGO_X_DOMAIN/api</string>
+    <string keyName="enrollToken">YOUR_ENROLL_TOKEN</string>
+    <bool   keyName="enforced">true</bool>
+    <bool   keyName="logAiTools">true</bool>
+    <bool   keyName="logShadowIt">true</bool>
+    <bool   keyName="blockHighRisk">false</bool>
+
+    <!-- Android Enterprise URL Filter (via Chrome managed config) -->
+    <!-- Deploy to Chrome via: Intune > Apps > App configuration policies > Managed devices > Chrome -->
+    <string keyName="URLBlocklist">
+      character.ai,
+      tiktok.com,
+      telegram.org
+    </string>
+    <string keyName="URLAllowlist">*</string>
+
+    <!-- Kiosk mode (optional — single-app mode) -->
+    <bool keyName="kioskModeEnabled">false</bool>
+
+    <!-- Prevent users from installing apps outside managed catalog -->
+    <bool keyName="blockUnmanagedApps">true</bool>
+  </dict>
+</managedAppConfiguration>

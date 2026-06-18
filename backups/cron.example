@@ -1,0 +1,39 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# DuFense AIGO-X GRC Platform — Example Cron Entries for Automated Backups
+# ─────────────────────────────────────────────────────────────────────────────
+# Copy relevant lines to the crontab of the user running Docker:
+#   crontab -e
+#
+# Variables:
+#   INSTALL_DIR — absolute path to your DuFense installation directory
+#   LOG_DIR     — where backup logs are written
+#
+# Adjust paths and schedules to match your retention policy.
+#
+# Ensure scripts/backup.sh and scripts/restore.sh are executable:
+#   chmod +x /opt/dufense/scripts/backup.sh /opt/dufense/scripts/restore.sh
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+# ── Daily full backup at 02:00 (local server time) ───────────────────────────
+# Dumps Postgres + Redis snapshot, compresses, stores locally and/or uploads.
+0 2 * * * root /opt/dufense/scripts/backup.sh >> /var/log/dufense-backup.log 2>&1
+
+# ── Weekly backup with extended retention (Sunday 01:00) ─────────────────────
+# BACKUP_TAG=weekly keeps these backups separate from daily ones.
+0 1 * * 0 root BACKUP_TAG=weekly /opt/dufense/scripts/backup.sh >> /var/log/dufense-backup-weekly.log 2>&1
+
+# ── Hourly Postgres-only hot backup (high-availability environments) ──────────
+# Set BACKUP_REDIS=false to skip Redis when only DB hot-backup is needed.
+# 0 * * * * root BACKUP_REDIS=false /opt/dufense/scripts/backup.sh >> /var/log/dufense-backup-hourly.log 2>&1
+
+# ── Prune backups older than 30 days from local storage ──────────────────────
+0 3 * * * root find /opt/dufense/backups/daily -name "*.tar.gz" -mtime +30 -delete >> /var/log/dufense-prune.log 2>&1
+
+# ── Prune weekly backups older than 90 days ───────────────────────────────────
+0 4 * * 0 root find /opt/dufense/backups/weekly -name "*.tar.gz" -mtime +90 -delete >> /var/log/dufense-prune.log 2>&1
+
+# ── Verify last backup is readable (daily integrity check at 04:30) ───────────
+# Exits non-zero if the most-recent archive is corrupt; alerts via cron mail.
+# 30 4 * * * root /opt/dufense/scripts/backup.sh --verify-last >> /var/log/dufense-verify.log 2>&1

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AIGO-X Browser Agent — Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: #080c14; color: rgba(255,255,255,0.88);
+      min-height: 100vh; padding: 0;
+    }
+    .topbar {
+      background: linear-gradient(135deg, #1e3a5f, #065f46);
+      padding: 16px 32px; display: flex; align-items: center; gap: 12px;
+    }
+    .logo { font-size: 22px; font-weight: 900; color: white; }
+    .topbar h1 { font-size: 16px; font-weight: 800; color: white; }
+    .topbar p  { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+    .managed-banner {
+      background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.3);
+      border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;
+      display: none; align-items: center; gap: 10px;
+    }
+    .managed-banner.visible { display: flex; }
+    .managed-banner .icon { font-size: 18px; }
+    .managed-banner .text { font-size: 12px; color: rgba(255,255,255,0.8); line-height: 1.5; }
+    .managed-banner strong { color: #10b981; }
+    .content { max-width: 640px; margin: 0 auto; padding: 28px 24px; }
+    .card {
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px; padding: 20px 22px; margin-bottom: 16px;
+    }
+    .card h2 { font-size: 13px; font-weight: 800; color: rgb(147,197,253); margin-bottom: 14px; letter-spacing: 0.02em; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.45); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .field input, .field select {
+      width: 100%; background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px; padding: 9px 12px; font-size: 12px; color: rgba(255,255,255,0.85);
+      font-family: monospace; outline: none; transition: border-color 0.15s;
+    }
+    .field input:focus { border-color: rgb(147,197,253); }
+    .field input:disabled { opacity: 0.4; cursor: not-allowed; }
+    .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 12px; color: rgba(255,255,255,0.78); }
+    .toggle-desc  { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+    .toggle { width: 36px; height: 20px; border-radius: 10px; background: rgba(255,255,255,0.15); position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; border: none; }
+    .toggle.on  { background: #10b981; }
+    .toggle::after { content: ""; width: 14px; height: 14px; border-radius: 50%; background: white; position: absolute; top: 3px; left: 3px; transition: transform 0.2s; }
+    .toggle.on::after { transform: translateX(16px); }
+    .status-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 12px; }
+    .status-row:last-child { border-bottom: none; }
+    .status-row .k { color: rgba(255,255,255,0.4); }
+    .status-row .v { font-family: monospace; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; }
+    .btn { padding: 9px 18px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.85; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: linear-gradient(135deg, #1e3a5f, #065f46); color: white; border: none; }
+    .btn-danger  { background: rgba(239,68,68,0.12); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .btn-ghost   { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.1); }
+    .alert { border-radius: 8px; padding: 10px 14px; font-size: 12px; line-height: 1.5; margin-bottom: 14px; display: none; }
+    .alert.success { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); color: #10b981; display: block; }
+    .alert.error   { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.3);  color: #ef4444;  display: block; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; vertical-align: middle; }
+    .dot.connected { background: #10b981; box-shadow: 0 0 5px #10b98188; }
+    .dot.offline   { background: #ef4444; }
+    .dot.other     { background: #f59e0b; }
+    code { background: rgba(255,255,255,0.08); border-radius: 4px; padding: 1px 6px; font-family: monospace; font-size: 11px; color: rgb(147,197,253); }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">A</div>
+  <div>
+    <h1>AIGO-X Browser Agent — Configuration</h1>
+    <p>Connect this browser to your AIGO-X GRC Platform for AI &amp; SaaS security monitoring</p>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- Managed mode banner -->
+  <div class="managed-banner" id="managed-banner">
+    <div class="icon">🔒</div>
+    <div class="text">
+      <strong>Managed by Administrator</strong><br/>
+      This extension was deployed via enterprise policy. Configuration is locked by your organisation.
+      Connection settings and enforcement policies can only be changed by your AIGO-X administrator.
+    </div>
+  </div>
+
+  <div class="alert" id="alert"></div>
+
+  <!-- Connection -->
+  <div class="card">
+    <h2>Platform Connection</h2>
+    <div class="field">
+      <label>AIGO-X API Base URL</label>
+      <input type="url" id="api-base" placeholder="https://your-domain.replit.app/api" />
+    </div>
+    <div class="field">
+      <label>Enrolment Token / Bearer Token</label>
+      <input type="password" id="token" placeholder="Paste your platform API token here" />
+    </div>
+    <div class="field">
+      <label>Agent ID (assigned after enrolment)</label>
+      <input type="text" id="agent-id" placeholder="Auto-assigned on first connection" readonly />
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-enroll">Connect &amp; Enrol</button>
+      <button class="btn btn-ghost"   id="btn-heartbeat">↺ Test Heartbeat</button>
+      <button class="btn btn-danger"  id="btn-unenroll">Disconnect</button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="card">
+    <h2>Agent Status</h2>
+    <div class="status-row"><span class="k">Connection</span><span class="v" id="s-status">—</span></div>
+    <div class="status-row"><span class="k">Version</span>   <span class="v" id="s-version">—</span></div>
+    <div class="status-row"><span class="k">Browser</span>   <span class="v" id="s-browser">—</span></div>
+    <div class="status-row"><span class="k">Install type</span><span class="v" id="s-install">—</span></div>
+    <div class="status-row"><span class="k">Last heartbeat</span><span class="v" id="s-hb">—</span></div>
+    <div class="status-row"><span class="k">Events pending</span><span class="v" id="s-queue">—</span></div>
+  </div>
+
+  <!-- Monitoring policies -->
+  <div class="card">
+    <h2>Monitoring Policies</h2>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Log AI Tool Visits</div>
+        <div class="toggle-desc">Report visits to ChatGPT, Claude, Gemini, and 30+ other AI services</div>
+      </div>
+      <button class="toggle on" id="pol-ai-log" data-key="logAiTools"></button>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Log Shadow IT</div>
+        <div class="toggle-desc">Report visits to unapproved SaaS apps (Dropbox, Notion, etc.)</div>
+      </div>
+      <button class="toggle on" id="pol-shadow-log" data-key="logShadowIt"></button>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Block Unapproved AI Tools</div>
+        <div class="toggle-desc">Prevent navigation to unapproved AI services (requires declarativeNetRequest)</div>
+      </div>
+      <button class="toggle" id="pol-ai-block" data-key="blockAiTools"></button>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Block High-Risk Shadow IT</div>
+        <div class="toggle-desc">Block file-sharing and social media platforms classified as high risk</div>
+      </div>
+      <button class="toggle" id="pol-shadow-block" data-key="blockShadowIt"></button>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Tamper-Proof Mode</div>
+        <div class="toggle-desc">Lock configuration — only admin unenrolment allowed (see enterprise policy)</div>
+      </div>
+      <button class="toggle" id="pol-enforced" data-key="enforced"></button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-save-policies">Save Policies</button>
+    </div>
+  </div>
+
+  <!-- Enterprise deployment note -->
+  <div class="card">
+    <h2>Enterprise Tamper-Proof Deployment</h2>
+    <p style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;margin-bottom:12px">
+      To prevent users from disabling or removing this extension, deploy via managed browser policy.
+      When deployed this way, the extension shows <code>🔒 Managed</code> and users cannot remove it.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11px">
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px">
+        <div style="font-weight:800;color:rgb(147,197,253);margin-bottom:4px">Chrome / Edge</div>
+        <div style="color:rgba(255,255,255,0.5);line-height:1.5">ExtensionInstallForcelist via Google Workspace Admin, Intune, or ADMX Group Policy</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px">
+        <div style="font-weight:800;color:rgb(147,197,253);margin-bottom:4px">Firefox</div>
+        <div style="color:rgba(255,255,255,0.5);line-height:1.5">force_installed in Mozilla enterprise policies.json or via Intune</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px">
+        <div style="font-weight:800;color:rgb(147,197,253);margin-bottom:4px">Safari / iOS</div>
+        <div style="color:rgba(255,255,255,0.5);line-height:1.5">Deploy via Apple MDM (.mobileconfig profile). Supervised devices only.</div>
+      </div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:10px 12px">
+        <div style="font-weight:800;color:rgb(147,197,253);margin-bottom:4px">Android</div>
+        <div style="color:rgba(255,255,255,0.5);line-height:1.5">Chrome extensions not supported. Use AIGO-X Native Agent or managed Chrome kiosk mode.</div>
+      </div>
+    </div>
+    <p style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:10px">
+      Policy templates are in <code>deployment/</code> in the extension package. Download from AIGO-X → Agents → Browser Extension → Download Policies.
+    </p>
+  </div>
+
+</div>
+
+<script src="options.js"></script>
+</body>
+</html>

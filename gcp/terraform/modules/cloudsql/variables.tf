@@ -1,0 +1,11 @@
+variable "name_prefix"         { type = string }
+variable "gcp_project"         { type = string }
+variable "gcp_region"          { type = string }
+variable "tier"                { type = string }
+variable "postgres_version"    { type = string }
+variable "db_name"             { type = string }
+variable "db_user"             { type = string }
+variable "disk_size_gb"        { type = number }
+variable "backup_enabled"      { type = bool }
+variable "deletion_protection" { type = bool }
+variable "private_network_id"  { type = string }

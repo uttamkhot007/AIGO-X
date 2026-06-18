@@ -1,0 +1,398 @@
+Use:
+
+GovOps
+ └── Controls
+      ├── Overview
+      ├── Applicability
+      ├── Implementation
+      ├── Assessment
+      ├── Evidence
+      ├── Assets
+      ├── Risks
+      ├── Policies
+      ├── Procedures
+      ├── Incidents
+      ├── Exceptions
+      ├── Vendors
+      ├── AI Systems
+      ├── Findings
+      ├── CAPA
+      ├── Monitoring
+      └── Audit History
+Control Detail Page Structure
+
+Every control should open into a dedicated page.
+
+Example:
+
+ISO27001 A.5.15 Access Control
+
+Header
+Field	Value
+Control ID	ISO-A5.15
+Framework	ISO27001
+Domain	Access Control
+Owner	CISO
+Reviewer	Internal Auditor
+Status	Implemented
+Score	82%
+Risk Rating	Medium
+Last Review	01-Jun-2026
+Tab 1: Overview
+
+Contains:
+
+Description
+
+Control objective
+
+Purpose
+
+Why control exists
+
+Applicability
+
+Applicable/Not Applicable
+
+Linked Frameworks
+
+Example:
+
+ISO27001
+SOC2
+RBI
+SEBI
+NIST
+Mapped Risks
+
+Automatically fetched from RiskOps.
+
+Example:
+
+Unauthorized Access
+Privilege Escalation
+Tab 2: Implementation
+
+This is where maturity is measured.
+
+Deployment Scope
+
+Example:
+
+Endpoints = 5000
+Servers = 300
+Cloud Accounts = 25
+Applications = 60
+
+Control requires MFA everywhere.
+
+Deployment:
+
+Endpoints = 4800/5000
+Servers = 250/300
+Cloud Accounts = 25/25
+Applications = 55/60
+
+Automatic score:
+
+(4800+250+25+55)
+---------------- = 5130/5385
+(5000+300+25+60)
+
+95.26%
+
+Implementation Score = 95%
+
+Status Calculation
+Score	Status
+100%	Fully Implemented
+90-99%	Substantially Implemented
+70-89%	Partially Implemented
+<70%	Not Implemented
+Tab 3: Assessment
+
+Assessment differs from implementation.
+
+Example:
+
+MFA deployed everywhere.
+
+Implementation = 100%
+
+Assessment reveals:
+
+20 users bypassed MFA.
+
+Assessment Score = 96%
+
+Control Effectiveness = 96%
+
+Assessment contains:
+
+Design Effectiveness
+
+Is control properly designed?
+
+Operating Effectiveness
+
+Is control working?
+
+Testing History
+
+All previous tests
+
+Auditor Notes
+
+Audit observations
+
+Tab 4: Evidence
+
+Integrated EvidenceOps
+
+Evidence sources:
+
+Automatic
+
+Microsoft
+AWS
+Azure
+Google
+CrowdStrike
+Cynet
+Qualys
+Vicarius
+
+Manual
+
+Upload
+
+Third Party
+
+Audit reports
+
+Evidence attributes
+
+Field	Value
+Evidence Type	MFA Report
+Source	Azure AD
+Date	01-Jun-2026
+Status	Valid
+Auditor Review	Approved
+Tab 5: Asset Coverage
+
+Linked from AssetOps
+
+Example:
+
+Systems Covered
+
+5000/5200
+
+Business Applications
+
+55/60
+
+Vendors
+
+12/15
+
+Databases
+
+35/40
+
+Coverage automatically updates.
+
+Tab 6: Risk Linkage
+
+RiskOps integration.
+
+Control should show:
+
+Risk	Residual Risk
+R-101 Unauthorized Access	Low
+R-210 Credential Theft	Medium
+
+When control score drops:
+
+Risk automatically increases.
+
+Tab 7: Policy Mapping
+
+PolicyOps integration.
+
+Mapped Policies:
+
+Access Control Policy
+Password Policy
+MFA Standard
+
+Show:
+
+Approval date
+Review date
+Version
+
+Tab 8: Procedure Mapping
+
+Mapped SOPs
+
+Example:
+
+User Provisioning SOP
+User Deprovisioning SOP
+Privileged Access SOP
+Tab 9: Findings
+
+AuditOps integration
+
+Open findings
+
+Closed findings
+
+Observation trends
+
+Tab 10: CAPA
+
+Corrective actions linked to control.
+
+Example:
+
+Finding:
+
+MFA missing on 200 systems
+
+CAPA:
+
+Deploy MFA
+
+Owner:
+
+IT Security
+
+Target:
+
+30-Jun-2026
+
+Tab 11: Exceptions
+
+ExceptionOps
+
+Example:
+
+Legacy SAP server exempted
+
+Reason
+
+Compensating controls
+
+Approval
+
+Expiry
+
+Tab 12: Continuous Monitoring
+
+Live compliance score.
+
+Pulled from integrations.
+
+Example:
+
+MFA Control
+
+Yesterday:
+
+98%
+
+Today:
+
+94%
+
+Reason:
+
+300 users disabled MFA
+
+Auto alert triggered.
+
+Control Scoring Model
+
+Every control should have:
+
+Implementation Score
++
+Assessment Score
++
+Evidence Score
++
+Monitoring Score
++
+Risk Reduction Score
+
+Example:
+
+Component	Weight
+Implementation	30%
+Assessment	30%
+Evidence	15%
+Monitoring	15%
+Risk Reduction	10%
+
+Final Score:
+
+87%
+
+Multi-Framework Mapping
+
+One control should satisfy many frameworks.
+
+Example:
+
+MFA Control
+
+Maps to:
+
+ISO27001 A.5.17
+SOC2 CC6
+RBI Access Control
+SEBI Identity Security
+NIST PR.AA
+ISO42001 AI Access Control
+
+Single implementation.
+
+Multiple compliance outputs.
+
+AI-Powered Automation
+
+GovOps Agent should answer:
+
+Which controls are failing?
+Which systems are not covered?
+Which evidence is missing?
+Which controls impact RBI compliance?
+Generate SOA from implemented controls.
+Show controls with low effectiveness.
+Show controls overdue for assessment.
+Recommended Control Pagination Structure
+
+Every control page should contain:
+
+Overview
+Applicability
+Framework Mapping
+Assets Coverage
+Implementation
+Assessment
+Evidence
+Risks
+Policies
+Procedures
+Vendors
+AI Systems
+Findings
+CAPA
+Exceptions
+Continuous Monitoring
+Audit History
+Certification Impact
+Compliance Score
+Activity Timeline

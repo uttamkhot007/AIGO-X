@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "AIGO-X Browser Agent",
+  "short_name": "AIGO-X",
+  "version": "1.0.2",
+  "description": "Enterprise AI & SaaS security monitoring. Lightweight, tamper-resistant, cross-browser. Managed by your organisation's AIGO-X GRC Platform.",
+
+  "permissions": [
+    "storage",
+    "alarms",
+    "webNavigation",
+    "management",
+    "notifications"
+  ],
+  "host_permissions": [
+    "https://*/*",
+    "http://*/*"
+  ],
+
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AIGO-X Browser Agent",
+    "default_icon": {
+      "16":  "icons/icon16.png",
+      "48":  "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+
+  "icons": {
+    "16":  "icons/icon16.png",
+    "48":  "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none';"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ],
+
+  "minimum_chrome_version": "102",
+
+  "_note_firefox": "For Firefox, rename this file to manifest-firefox.json and change 'service_worker' to 'scripts': ['background.js']. Firefox supports MV3 from v109+.",
+  "_note_safari": "Safari Web Extension: run 'xcrun safari-web-extension-converter .' in Terminal. Requires Xcode 14+ and Apple Developer account. Supports macOS 12+ and iOS 15+.",
+  "_note_edge": "Edge uses this exact manifest. Deploy via Microsoft Intune or Edge Management Service — identical to Chrome enterprise policy.",
+
+  "_enterprise_note": "To prevent users from disabling this extension, deploy via managed browser policy. See deployment/ directory for templates: Chrome GPO, Firefox enterprise policy, Edge Intune, iOS MDM (.mobileconfig), Android Intune XML."
+}

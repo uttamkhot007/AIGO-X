@@ -1,0 +1,223 @@
+Recommended Asset Categories
+Category	Asset Types
+Endpoints	Workstations, Laptops, Desktops, Thin Clients
+Servers	Physical Servers, Virtual Servers
+Network	Firewall, Router, Switch, WLC, Load Balancer, VPN
+Security	WAF, SIEM, SOAR, EDR, IDS/IPS, DLP
+Cloud	AWS, Azure, GCP Resources
+Virtualization	VMware, Hyper-V, Nutanix, KVM
+Containers	Docker, Kubernetes, OpenShift
+SaaS	Microsoft 365, Salesforce, ServiceNow, GitHub
+Databases	Oracle, SQL Server, MySQL, PostgreSQL
+Applications	Web Apps, Mobile Apps, APIs
+IoT	Cameras, Sensors, Smart Devices
+OT/ICS	PLC, SCADA, RTU, HMI
+Identity	AD, Azure AD, Okta, IAM
+Storage	NAS, SAN, Object Storage
+Email	Exchange, O365, Gmail
+Certificates	SSL/TLS Certificates
+Domains	Internal & External Domains
+Data Assets	Sensitive Data Repositories
+AI Assets	LLMs, AI Models, AI Agents
+Third Party	Vendors, Suppliers, Managed Services
+Common Fields (Applicable to All Assets)
+Section	Fields
+Basic Info	Asset ID, Name, Type, Category, Description
+Ownership	Asset Owner, Technical Owner, Business Owner
+Location	Site, Datacenter, Region, Cloud Region
+Risk	Risk Score, Criticality, Exposure Score
+Lifecycle	Purchase Date, Warranty, EOL, EOS
+Security	Security Score, Compliance Score
+Classification	Confidentiality, Integrity, Availability
+Compliance	Applicable Controls
+Discovery	Discovery Source
+Tags	Department, Environment
+Integration	Source System
+Status	Active, Inactive, Retired
+Workstations / Laptops
+Section	Fields
+Hardware	Manufacturer, Model, Serial No
+CPU	Processor
+Memory	RAM
+Storage	Disk Type
+OS	Windows/Mac/Linux
+Network	IP, MAC
+Security	EDR Status
+User	Logged-in User
+Compliance	CIS Benchmark Score
+Physical Servers
+Section	Fields
+Hardware	Vendor, Model
+Datacenter	Rack, U Position
+CPU	Cores
+Memory	RAM
+Storage	SAN/NAS
+Virtualization	Hypervisor
+Backup	Last Backup
+DR	DR Status
+Business Service	Linked Applications
+Virtual Machines
+Section	Fields
+Hypervisor	VMware, HyperV
+Cluster	Cluster Name
+Host	Parent Host
+Snapshots	Count
+Resource Allocation	CPU, RAM
+Datastore	Storage
+Backup	Status
+Network Devices
+Firewall
+Section	Fields
+Vendor	Palo Alto, Checkpoint
+HA	Active/Passive
+Interfaces	Count
+Policies	Count
+VPN Tunnels	Count
+Threat Prevention	Enabled
+Firmware	Version
+Licenses	Expiry
+Router
+Section	Fields
+Routing Protocols	OSPF/BGP
+Interfaces	Count
+Firmware	Version
+WAN Links	Count
+Switch
+Section	Fields
+Ports	Total/Used
+VLANs	Count
+STP	Status
+Firmware	Version
+Load Balancer
+Section	Fields
+Virtual Servers	Count
+Pools	Count
+SSL Certificates	Count
+Health Checks	Status
+Cloud Assets
+AWS Account
+Section	Fields
+Account ID	AWS Account
+Organization	OU
+Region	Primary Region
+IAM Users	Count
+IAM Roles	Count
+Security Hub	Status
+GuardDuty	Status
+Inspector	Status
+EC2 Instance
+Section	Fields
+Instance ID	AWS ID
+Type	t3.large
+VPC	Name
+Security Groups	Assigned
+Public IP	Yes/No
+Backup	Status
+Tags	Environment
+Azure VM
+Section	Fields
+Subscription	Name
+Resource Group	Name
+VM Size	SKU
+NSG	Attached
+Defender Status	Enabled
+Containers
+Kubernetes Cluster
+Section	Fields
+Cluster Name	Name
+Version	K8s Version
+Nodes	Count
+Namespaces	Count
+Ingress Controllers	Count
+RBAC Status	Enabled
+Secrets	Count
+Pod
+Section	Fields
+Namespace	Name
+Node	Assigned
+Image	Container Image
+Vulnerabilities	Count
+Privileged	Yes/No
+SaaS Applications
+Section	Fields
+Application Name	M365
+Vendor	Microsoft
+Admin Accounts	Count
+MFA Enabled	%
+Users	Count
+Licenses	Count
+Data Classification	Sensitive Data
+SSO	Enabled
+Databases
+Section	Fields
+Database Type	Oracle
+Version	Version
+Encryption	Enabled
+Backup Status	Latest Backup
+Sensitive Records	Count
+DBA Owner	Owner
+Identity Assets
+Active Directory
+Section	Fields
+Forests	Count
+Domains	Count
+Domain Controllers	Count
+Privileged Accounts	Count
+Stale Accounts	Count
+MFA Coverage	%
+Entra ID / Azure AD
+Section	Fields
+Users	Count
+Groups	Count
+Conditional Access Policies	Count
+Risky Users	Count
+IoT Assets
+Section	Fields
+Device Type	Camera
+Vendor	Vendor
+Firmware	Version
+Protocol	MQTT
+Location	Physical Site
+Authentication	Enabled
+Encryption	Enabled
+OT / ICS Assets
+Section	Fields
+Device Type	PLC
+Vendor	Siemens
+Process	Linked Process
+Protocol	Modbus
+Firmware	Version
+Safety Critical	Yes/No
+AI Assets (Very Important for ISO 42001)
+Section	Fields
+AI Asset Type	LLM, Agent
+Model Name	GPT, Claude
+Provider	OpenAI
+Training Data	Source
+Sensitive Data Access	Yes/No
+Risk Level	High/Medium
+Hallucination Testing	Status
+AI Owner	Owner
+AI Classification	Internal/Public
+Additional Tabs to Add Beyond Current Design
+
+Your current tabs:
+
+Overview | Hardware | Software | Network | Lifecycle | Risk | Controls | Compliance | Dependencies | AI Analysis | History
+
+Add:
+
+New Tab	Purpose
+Vulnerabilities	CVEs, Patch Status
+Security Tools	EDR, AV, DLP, SIEM Coverage
+Identities	Users & Service Accounts
+Exposures	Internet Exposure
+Data	Sensitive Data Found
+Incidents	Related Security Events
+Changes	Change History
+Evidence	Screenshots, Logs, Reports
+Audit Trail	Who Modified What
+Integrations	Source Connectors
+Cost & Licensing	Cloud & Software Cost
+Business Mapping	Service Mapping
+Attack Paths	Attack Surface Relationships

@@ -1,0 +1,48 @@
+{
+  "_description": "Chrome / Edge Enterprise Policy — Force-install AIGO-X Browser Agent so users cannot disable or remove it.",
+  "_deploy_chrome": "Upload to Google Workspace Admin Console → Devices → Chrome → Apps & Extensions → Force Install",
+  "_deploy_edge":   "Upload to Microsoft Intune → Apps → Browser extensions → Add. Or via Edge Management Service.",
+  "_deploy_admx":   "Windows GPO: Computer Configuration → Administrative Templates → Google Chrome → Extensions → Configure the list of force-installed apps",
+
+  "ExtensionInstallForcelist": [
+    "__EXTENSION_ID__;<UPDATE_URL>"
+  ],
+
+  "ExtensionSettings": {
+    "__EXTENSION_ID__": {
+      "installation_mode": "force_installed",
+      "update_url": "__UPDATE_URL__",
+      "toolbar_pin": "force_pinned",
+      "allowed_permissions": ["storage", "alarms", "webNavigation", "management", "notifications"],
+      "blocked_permissions": [],
+      "minimum_version_required": "1.0.0",
+      "runtime_allowed_hosts": ["https://*/*"],
+      "runtime_blocked_hosts": [],
+
+      "_note_managed_storage": "Pre-configure extension via managed storage (below) to auto-enroll without user interaction"
+    }
+  },
+
+  "_managed_storage_schema": "Create a file at: /etc/opt/chrome/policies/managed/aigo-x-agent.json (Linux/Mac) or HKLM\\SOFTWARE\\Policies\\Google\\Chrome\\3rdparty\\extensions\\<EXT_ID>\\policy (Windows Registry)",
+
+  "ManagedStoragePolicy": {
+    "apiBase": "https://YOUR_AIGO_X_DOMAIN/api",
+    "token":   "YOUR_ENROLL_TOKEN",
+    "agentId": "auto",
+    "enforced": true,
+    "policies": {
+      "logAiTools":    true,
+      "logShadowIt":   true,
+      "blockAiTools":  false,
+      "blockShadowIt": false
+    }
+  },
+
+  "_windows_registry_deploy": {
+    "key": "HKLM\\SOFTWARE\\Policies\\Google\\Chrome\\ExtensionInstallForcelist",
+    "value_name": "1",
+    "value_data": "__EXTENSION_ID__;https://clients2.google.com/service/update2/crx"
+  },
+
+  "_powershell_snippet": "# Windows PowerShell — Deploy Chrome policy via registry\n$path = 'HKLM:\\SOFTWARE\\Policies\\Google\\Chrome\\ExtensionInstallForcelist'\nIf (!(Test-Path $path)) { New-Item -Path $path -Force }\nSet-ItemProperty -Path $path -Name 1 -Value '__EXT_ID__;https://clients2.google.com/service/update2/crx'"
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@workspace/aigo-x",
+  "version": "1.0.0",
+  "description": "DuFense AIGO-X GRC Platform — Operator CLI",
+  "type": "module",
+  "bin": {
+    "aigo-x": "./dist/index.mjs"
+  },
+  "scripts": {
+    "build": "node ./build.mjs",
+    "prepare": "node ./build.mjs",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "commander": "^12.1.0",
+    "ora": "^8.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "esbuild": "0.27.3",
+    "tsx": "4.21.0",
+    "typescript": "^5.8.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

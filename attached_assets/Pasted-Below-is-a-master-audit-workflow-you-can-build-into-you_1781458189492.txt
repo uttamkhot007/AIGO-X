@@ -1,0 +1,258 @@
+Below is a master audit workflow you can build into your GRC platform and reuse across ISO 27001, SOC 2, RBI, SEBI, PCI DSS, NIST CSF, DPDPA/GDPR, HIPAA, and ISO 42001.
+
+Universal Compliance Audit Workflow
+Stage	Workflow	Output
+1	Select framework and audit type	ISO audit, SOC 2 audit, RBI audit, SEBI audit, etc.
+2	Define scope	Entity, location, process, application, cloud, vendor, data, AI systems
+3	Create audit plan	Audit objective, criteria, dates, auditor, auditee, sampling method
+4	Map requirements to controls	Framework control library
+5	Assign control owners	RACI matrix
+6	Perform pre-audit questionnaire	Readiness score
+7	Collect documents	Policy, SOP, registers, reports, logs
+8	Collect technical evidence	IAM, MFA, EDR, SIEM, VA, backup, cloud, DLP evidence
+9	Conduct walkthrough	Process understanding
+10	Test design effectiveness	Is the control properly designed?
+11	Test operating effectiveness	Is the control working consistently?
+12	Record observations	Compliant / partially compliant / non-compliant
+13	Rate findings	Critical, high, medium, low
+14	Create CAPA	Corrective and preventive action plan
+15	Validate remediation	Evidence-based closure
+16	Conduct management review	Leadership approval
+17	Generate audit report	Final audit report
+18	Certification / regulator readiness	Audit pack
+19	Continuous monitoring	Compliance dashboard
+
+SOC 2 audits are based on AICPA Trust Services Criteria covering Security, Availability, Processing Integrity, Confidentiality, and Privacy. SEBI issued its Cybersecurity and Cyber Resilience Framework for regulated entities in August 2024, with later FAQs/clarifications in 2025. RBI’s IT Governance, Risk, Controls and Assurance directions are important for Indian regulated entities.
+
+1. ISO 27001 Audit Workflow
+Audit Types
+ISMS internal audit
+Supplier security audit
+Stage 1 certification readiness
+Stage 2 certification readiness
+Surveillance audit
+Recertification audit
+Workflow
+Step	Activity	Evidence
+1	Confirm ISMS scope	ISMS scope document
+2	Review context and interested parties	Context register
+3	Review risk methodology	Risk assessment procedure
+4	Review risk register	Risk register
+5	Review SOA	Statement of Applicability
+6	Check policies	Approved policies
+7	Test Annex A controls	Control evidence
+8	Check competence and awareness	Training records
+9	Review incidents	Incident register
+10	Review internal audit	Audit report
+11	Review management review	MOM
+12	Check CAPA closure	Corrective action register
+13	Prepare certification pack	Stage 1 / Stage 2 pack
+Key Outputs
+ISO 27001 gap report
+SOA
+Risk treatment plan
+Internal audit report
+NC / OFI register
+Management review minutes
+Certification readiness score
+2. SOC 2 Audit Workflow
+Audit Types
+SOC 2 Type 1 readiness
+SOC 2 Type 2 readiness
+SOC 2 bridge letter support
+Annual SOC 2 audit
+Workflow
+Step	Activity	Evidence
+1	Define system description	System boundary
+2	Select TSC criteria	Security, Availability, Confidentiality, Processing Integrity, Privacy
+3	Identify control activities	SOC 2 control matrix
+4	Map tools and evidence	Jira, GitHub, IAM, HRMS, SIEM
+5	Test control design	Type 1 readiness
+6	Test operating effectiveness	Type 2 evidence
+7	Sample tickets and logs	Change, access, incident, vendor samples
+8	Validate exceptions	Exception register
+9	Prepare management assertion	Management representation
+10	Auditor evidence pack	SOC 2 audit pack
+Common SOC 2 Evidence
+Background verification
+Access provisioning and deprovisioning
+Quarterly access review
+MFA report
+Change tickets
+Code review
+Vulnerability reports
+Incident records
+DR test report
+Vendor reviews
+Security awareness records
+3. RBI Audit Workflow
+Audit Types
+RBI IT governance audit
+Cybersecurity audit
+IT outsourcing audit
+Digital payment security audit
+IS audit
+DR/BCP audit
+Workflow
+Step	Activity	Evidence
+1	Identify applicable RBI circulars/directions	Applicability matrix
+2	Review board oversight	Board/IT committee minutes
+3	Review IT strategy and IT governance	IT strategy, IT policy
+4	Review CISO/security governance	CISO charter, org structure
+5	Review cyber risk management	Cyber risk register
+6	Review outsourcing controls	Vendor due diligence, contracts
+7	Review SOC and monitoring	SIEM/SOC reports
+8	Review incident response	Incident reports, regulator reporting
+9	Review BCP/DR	DR test, RTO/RPO evidence
+10	Review IS audit closure	Audit findings and CAPA
+11	Generate RBI compliance dashboard	Board/regulator pack
+Key RBI Evidence
+Board-approved IT strategy
+IT steering committee minutes
+CISO report
+VA/PT report
+SOC monthly report
+Cyber incident register
+Outsourcing risk assessment
+SLA and exit plan
+DR drill report
+IS audit report
+Regulatory submission tracker
+4. SEBI CSCRF Audit Workflow
+Audit Types
+SEBI CSCRF readiness audit
+Cyber audit
+Cyber resilience audit
+VAPT audit
+SOC monitoring audit
+Workflow
+Step	Activity	Evidence
+1	Classify SEBI regulated entity type	RE classification
+2	Determine applicable CSCRF controls	Applicability matrix
+3	Review governance	Cybersecurity committee, board reports
+4	Review asset inventory	Critical asset register
+5	Review protection controls	MFA, PAM, EDR, DLP, WAF
+6	Review detection capability	SIEM, SOC, threat intelligence
+7	Review incident response	IR plan, incident records
+8	Review cyber resilience	Backup, DR, ransomware readiness
+9	Review third-party controls	Vendor assessment
+10	Generate SEBI audit report	CSCRF compliance pack
+SEBI Evidence
+Cybersecurity policy
+Critical systems list
+VAPT report
+SOC report
+Cyber drill/tabletop report
+DR test report
+Incident reporting evidence
+Cyber audit report
+Board reporting evidence
+5. PCI DSS Audit Workflow
+Workflow
+Step	Activity	Evidence
+1	Define cardholder data environment	CDE scope
+2	Review network segmentation	Network diagram
+3	Review firewall rules	Firewall rule review
+4	Review card data storage	Data discovery report
+5	Test encryption	Encryption configuration
+6	Review vulnerability management	ASV scan, VA/PT
+7	Review access controls	User access review
+8	Review logging	SIEM/log review
+9	Review security testing	Pen test report
+10	Prepare ROC/SAQ evidence	PCI audit pack
+6. NIST CSF Audit Workflow
+
+NIST CSF 2.0 is structured around Govern, Identify, Protect, Detect, Respond, and Recover.
+
+Function	Audit Focus
+Govern	Policy, risk governance, roles, oversight
+Identify	Assets, risks, vendors, business context
+Protect	Access control, awareness, data security
+Detect	Monitoring, SIEM, anomaly detection
+Respond	Incident response, communication
+Recover	Backup, DR, restoration
+
+Output:
+
+Current profile
+Target profile
+Gap report
+Maturity score
+Roadmap
+7. DPDPA / GDPR Privacy Audit Workflow
+Workflow
+Step	Activity	Evidence
+1	Identify personal data processing	Data inventory
+2	Map data flows	Data flow diagram
+3	Review consent/legal basis	Consent register
+4	Review privacy notice	Privacy policy
+5	Review DSAR process	DSAR register
+6	Review breach response	Breach register
+7	Review processor/vendor controls	DPA, vendor due diligence
+8	Review retention and deletion	Retention schedule
+9	Conduct DPIA	DPIA report
+10	Generate privacy audit report	Privacy compliance pack
+8. ISO 42001 AI Governance Audit Workflow
+Workflow
+Step	Activity	Evidence
+1	Define AI management system scope	AI scope document
+2	Create AI inventory	AI model/use-case register
+3	Classify AI risk	AI risk register
+4	Conduct AI impact assessment	AIIA report
+5	Review AI policies	AI governance policy
+6	Test data governance	Training/input data evidence
+7	Review model monitoring	Drift, bias, hallucination logs
+8	Review human oversight	Approval records
+9	Review AI vendor risk	AI vendor assessment
+10	Review AI incident handling	AI incident register
+11	Prepare ISO 42001 audit pack	Certification readiness pack
+Audit Finding Workflow
+
+Use one common workflow for all frameworks:
+
+Finding Identified
+→ Evidence Attached
+→ Risk Rating
+→ Root Cause Analysis
+→ Corrective Action
+→ Preventive Action
+→ Owner Assignment
+→ Due Date
+→ Remediation Evidence
+→ Auditor Validation
+→ Closure
+→ Management Review
+
+Automation Blueprint
+
+Your GRC platform should automate:
+
+Framework applicability questionnaire
+Control mapping
+Audit checklist generation
+Evidence request list
+Evidence reminders
+API-based evidence collection
+Sampling selection
+Control test scripts
+Risk scoring
+Finding severity
+CAPA creation
+Audit report generation
+Board dashboard
+Certification readiness score
+Dashboard Metrics
+
+Show:
+
+Compliance score
+Audit readiness %
+Controls passed/failed
+Evidence pending
+Open findings
+High-risk gaps
+CAPA overdue
+Policies overdue
+Access reviews pending
+Vendor reviews pending
+Certification status
