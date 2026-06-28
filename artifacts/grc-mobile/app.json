@@ -1,0 +1,75 @@
+{
+  "expo": {
+    "name": "AIGO-X GRC",
+    "slug": "grc-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "grc-mobile",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0e1020"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.aigox.grc",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "AIGO-X GRC uses your camera to capture evidence photos and documents for compliance audits.",
+        "NSPhotoLibraryUsageDescription": "AIGO-X GRC accesses your photo library to attach evidence files to compliance reports and audit records.",
+        "NSPhotoLibraryAddUsageDescription": "AIGO-X GRC saves compliance evidence screenshots to your photo library.",
+        "NSLocationWhenInUseUsageDescription": "AIGO-X GRC uses your location to associate audit activities and on-site inspections with their geographic context.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "AIGO-X GRC uses your location to associate audit activities and on-site inspections with their geographic context."
+      }
+    },
+    "android": {
+      "package": "com.aigox.grc",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/icon.png",
+        "backgroundColor": "#0e1020"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/images/icon.png"
+    },
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "origin": "https://replit.com/"
+        }
+      ],
+      "expo-font",
+      "expo-web-browser",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "AIGO-X GRC accesses your photo library to attach evidence files to compliance reports and audit records.",
+          "cameraPermission": "AIGO-X GRC uses your camera to capture evidence photos and documents for compliance audits."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "AIGO-X GRC uses your location to associate audit activities and on-site inspections with their geographic context."
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
