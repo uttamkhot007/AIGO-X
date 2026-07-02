@@ -7,7 +7,8 @@
     "dev": "vite --config vite.config.ts --host 0.0.0.0",
     "build": "vite build --config vite.config.ts",
     "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test --import tsx 'src/**/*.test.ts'"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -68,6 +69,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
+    "tsx": "catalog:",
     "tw-animate-css": "^1.4.0",
     "vaul": "^1.1.2",
     "vite": "catalog:",
@@ -77,8 +79,11 @@
   "dependencies": {
     "@xyflow/react": "^12.11.0",
     "bootstrap-icons": "^1.13.1",
+    "exceljs": "^4.4.0",
     "fflate": "^0.8.3",
-    "xlsx": "^0.18.5",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "xlsx-js-style": "^1.2.0"
   }
 }
