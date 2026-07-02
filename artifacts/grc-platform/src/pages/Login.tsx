@@ -4,6 +4,14 @@ import { useLogin } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
 import { getApiUrl } from "@/lib/api";
 
+interface SsoStatus {
+  enabled: boolean;
+  tenantId?: number;
+  orgName?: string;
+  providerType?: string;
+  localLoginEnabled?: boolean;
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface PlatformStats {
@@ -111,18 +119,90 @@ const CSS = `
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
+// ── SSO error code → friendly message map ────────────────────────────────────
+
+const SSO_ERROR_MESSAGES: Record<string, string> = {
+  discovery_timeout:      "The identity provider did not respond in time. It may be temporarily unavailable — please try again in a few minutes.",
+  token_exchange_timeout: "The identity provider took too long during token exchange. Please try again.",
+  token_exchange_rejected: "The identity provider rejected the sign-in request (invalid credentials or misconfigured client). Contact your administrator to verify the SSO client ID and secret.",
+  idp_unreachable:        "The identity provider could not be reached. Please try again or contact your administrator.",
+  sso_error:              "An unexpected SSO error occurred. Please try again or contact your administrator.",
+  sso_callback_failed:    "Sign-in could not be completed. Please try again.",
+  sso_not_configured:     "Single sign-on is not fully configured for your organisation. Contact your administrator.",
+  sso_misconfigured:      "The SSO configuration is incomplete. Contact your administrator.",
+  missing_code:           "The identity provider did not return the expected authorisation code. Please try again.",
+  invalid_state:          "Your SSO session expired or appears to be a replay. Please try signing in again.",
+  no_email_claim:         "Your identity provider did not return an email address. Ensure your IdP is configured to include the email claim.",
+  provisioning_conflict:  "This email address is registered under a different organisation. Contact your administrator.",
+  unsupported_provider:   "This SSO provider type is not supported. Contact your administrator.",
+  no_saml_response:       "No SAML assertion was received from the identity provider.",
+  invalid_saml_assertion: "The SAML assertion is missing required fields. Contact your administrator.",
+  saml_validation_failed: "The identity provider's SAML response could not be validated. Please try again.",
+  access_denied:          "Access was denied by the identity provider. Check your account permissions.",
+  login_required:         "Your session has expired. Please sign in again.",
+};
+
+function decodeSsoError(raw: string): string {
+  const key = raw.toLowerCase().replace(/[^a-z0-9_]/g, "_");
+  return SSO_ERROR_MESSAGES[key] ?? SSO_ERROR_MESSAGES[raw] ?? `Sign-in failed: ${raw}`;
+}
+
 export default function Login() {
   const [, navigate]        = useLocation();
   const { setToken }        = useAuth();
-  const [email, setEmail]   = useState("admin@acme.com");
-  const [password, setPassword] = useState("password123");
+  // Demo convenience: prefill credentials only in dev builds so production
+  // users never see admin@acme.com / password123 on first paint (shoulder-surfing
+  // / source-leak risk). The quick-demo chips below still work in all builds.
+  const DEMO = import.meta.env.DEV;
+  const [email, setEmail]   = useState(DEMO ? "admin@acme.com" : "");
+  const [password, setPassword] = useState(DEMO ? "password123" : "");
   const [error, setError]   = useState("");
   const [showPw, setShowPw] = useState(false);
   const login               = useLogin();
 
+  // Read ?error= from the URL — set by the SSO backend on failure
+  const [ssoError, setSsoError] = useState<string | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get("error");
+    if (raw) {
+      // URLSearchParams.get() already percent-decodes; no extra decodeURIComponent needed
+      setSsoError(decodeSsoError(raw));
+      // Clean the error param from the URL so a refresh doesn't re-display it
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete("error");
+      window.history.replaceState({}, "", clean.toString());
+    }
+  }, []);
+
   // Live platform stats — fetched from the public (no-auth) /api/public/stats endpoint
   const [stats, setStats]       = useState<PlatformStats>(FALLBACK_STATS);
   const [statsReady, setStatsReady] = useState(false);
+  const [statsError, setStatsError] = useState(false); // MED-F-002
+  const [sso, setSso]               = useState<SsoStatus | null>(null);
+
+  // Fetch SSO status — resolve by domain first, fall back to tenantId=1 for dev
+  useEffect(() => {
+    const domain = window.location.hostname;
+    const url = domain === "localhost" || domain.endsWith(".replit.dev") || domain.endsWith(".repl.co")
+      ? getApiUrl("/auth/sso/check?tenantId=1")
+      : getApiUrl(`/auth/sso/check?domain=${encodeURIComponent(domain)}`);
+
+    fetch(url)
+      .then(r => r.ok ? r.json() as Promise<SsoStatus> : Promise.resolve({ enabled: false }))
+      .then(s => setSso(s))
+      .catch(() => setSso({ enabled: false }));
+  }, []);
+
+  function handleSsoLogin() {
+    const tenantId = sso?.tenantId ?? 1;
+    // Store tenantId so SsoCallback can construct a retry URL without extra state
+    sessionStorage.setItem("sso_tenant_id", String(tenantId));
+    // /auth/sso/initiate/:tenantId is the canonical entry point — it kicks off
+    // OIDC discovery and redirects to the IdP.  The callback lands on
+    // /api/auth/sso/callback/oidc which the admin must register in Entra / IdP.
+    window.location.href = getApiUrl(`/auth/sso/initiate/${tenantId}`);
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -142,7 +222,7 @@ export default function Login() {
         });
         setStatsReady(true);
       })
-      .catch(() => setStatsReady(true));     // keep fallback values on error
+      .catch(() => { setStatsReady(true); setStatsError(true); })     // MED-F-002: don't show fabricated fallback on error
     return () => controller.abort();
   }, []);
 
@@ -153,20 +233,21 @@ export default function Login() {
   // ~2.5 s per name feels like a natural news ticker pace
   const tickerDuration = `${tickerSample.length * 2.5}s`;
 
-  // Float cards — values from live stats
+  // Float cards — values from live stats (MED-F-002: show '—' on API error)
+  const sv = statsError ? "—" : null;
   const floatCards = [
     {
-      icon: "🛡",  title: "Risk Score",   value: `${stats.grcScore}/100`,
-      sub: stats.grcScore >= 90 ? "Excellent posture" : stats.grcScore >= 75 ? "Good posture" : "Needs attention",
+      icon: "🛡",  title: "Risk Score",   value: sv ?? `${stats.grcScore}/100`,
+      sub: statsError ? "Unavailable" : stats.grcScore >= 90 ? "Excellent posture" : stats.grcScore >= 75 ? "Good posture" : "Needs attention",
       color: stats.grcScore >= 90 ? "#34D399" : stats.grcScore >= 75 ? "#FCD34D" : "#F87171",
     },
     {
-      icon: "✅",  title: "Compliance",   value: `${stats.frameworkCount}`,
-      sub: "Active frameworks",   color: "#93C5FD",
+      icon: "✅",  title: "Compliance",   value: sv ?? `${stats.frameworkCount}`,
+      sub: statsError ? "Unavailable" : "Active frameworks",   color: "#93C5FD",
     },
     {
-      icon: "🤖",  title: "AI Agents",   value: `${stats.agentCount} Active`,
-      sub: "Running 24/7",         color: "#FCD34D",
+      icon: "🤖",  title: "AI Agents",   value: sv ?? `${stats.agentCount} Active`,
+      sub: statsError ? "Unavailable" : "Running 24/7",         color: "#FCD34D",
     },
   ];
 
@@ -195,7 +276,23 @@ export default function Login() {
           setToken(data.token, data.user?.name ?? undefined);
           navigate("/");
         },
-        onError() { setError("Invalid email or password. Try password123"); },
+        onError(err: unknown) {
+          // Discriminate by HTTP status so the user can tell bad creds from
+          // rate-limiting from a server/network problem. Previously every
+          // failure showed the same "Try password123" message.
+          const status = (err as { status?: number } | null)?.status;
+          if (status === 429) {
+            setError("Too many sign-in attempts. Please wait a few minutes and try again.");
+          } else if (status === 401) {
+            setError("Invalid email or password.");
+          } else if (typeof status === "number") {
+            // 5xx / other HTTP errors
+            setError("Sign-in failed. Please try again in a moment.");
+          } else {
+            // No status → network/fetch error (server unreachable)
+            setError("Unable to reach the server. Check your connection and try again.");
+          }
+        },
       },
     );
   }
@@ -358,7 +455,34 @@ export default function Login() {
                 <p style={{ margin: 0, fontSize: 13, color: "rgba(255,255,255,0.45)", fontWeight: 500, lineHeight: 1.5 }}>Sign in to your GRC command center</p>
               </div>
 
-              {/* Quick-fill chips */}
+              {/* SSO error banner — shown when the backend redirects back with ?error= */}
+              {ssoError && (
+                <div style={{
+                  background: "rgba(251,191,36,0.10)",
+                  border: "1px solid rgba(251,191,36,0.30)",
+                  borderRadius: 10,
+                  padding: "10px 13px",
+                  marginBottom: 18,
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 9,
+                }}>
+                  <span style={{ fontSize: 14, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#FCD34D", marginBottom: 3 }}>SSO Sign-In Failed</div>
+                    <div style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", lineHeight: 1.5 }}>{ssoError}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSsoError(null)}
+                    style={{ marginLeft: "auto", background: "none", border: "none", color: "rgba(255,255,255,0.3)", cursor: "pointer", fontSize: 14, padding: 0, flexShrink: 0 }}
+                    aria-label="Dismiss"
+                  >✕</button>
+                </div>
+              )}
+
+              {/* Quick-fill chips — HIGH-F-005: DEV-only, never ship in production */}
+              {DEMO && (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.3)", letterSpacing: "0.6px", textTransform: "uppercase", marginBottom: 8 }}>Quick Demo Access</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -374,7 +498,38 @@ export default function Login() {
                   })}
                 </div>
               </div>
+              )}
 
+              {/* SSO Sign-in Button — shown when IdP is configured */}
+              {sso?.enabled && (
+                <div style={{ marginBottom: 18 }}>
+                  <button
+                    type="button"
+                    onClick={handleSsoLogin}
+                    style={{
+                      width: "100%", padding: "12px", borderRadius: 12, border: "1px solid rgba(147,197,253,0.3)",
+                      background: "rgba(59,130,246,0.10)", color: "white", fontSize: 13, fontWeight: 700,
+                      cursor: "pointer", fontFamily: "inherit", display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                      transition: "all 0.2s",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(59,130,246,0.20)"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(59,130,246,0.10)"; }}
+                  >
+                    <span style={{ fontSize: 16 }}>🏛</span>
+                    Sign in with {sso.orgName ?? "your organisation"}
+                  </button>
+                  {sso.localLoginEnabled !== false && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "18px 0 6px" }}>
+                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)", fontWeight: 600, letterSpacing: "0.5px" }}>OR SIGN IN WITH PASSWORD</span>
+                      <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.08)" }} />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Hide username/password form when SSO is the only auth method */}
+              {(!sso?.enabled || sso?.localLoginEnabled !== false) && (
               <form onSubmit={handleSubmit}>
                 {/* Email */}
                 <div style={{ marginBottom: 14 }}>
@@ -390,7 +545,9 @@ export default function Login() {
                 <div style={{ marginBottom: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 }}>
                     <label style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.45)", letterSpacing: "0.4px", textTransform: "uppercase" }}>Password</label>
-                    <button type="button" style={{ background: "none", border: "none", fontSize: 11, color: "#93C5FD", fontWeight: 700, cursor: "pointer", fontFamily: "inherit", padding: 0 }}>Forgot password?</button>
+                    <span title="Self-service password reset is not yet available. Contact your administrator to reset your password."
+                      style={{ fontSize: 11, color: "rgba(147,197,253,0.4)", fontWeight: 600, fontFamily: "inherit" }}
+                    >Forgot password?</span>
                   </div>
                   <div style={{ position: "relative" }}>
                     <span style={{ position: "absolute", left: 13, top: "50%", transform: "translateY(-50%)", fontSize: 13, pointerEvents: "none", opacity: 0.4 }}>🔒</span>
@@ -418,11 +575,12 @@ export default function Login() {
                   }
                 </button>
               </form>
+              )}
 
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 18 }}>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
+                {DEMO && (<span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>
                   Demo: <strong style={{ color: "rgba(147,197,253,0.7)" }}>password123</strong>
-                </span>
+                </span>)}
                 <button onClick={() => navigate("/register")} style={{ background: "none", border: "none", fontSize: 12, fontWeight: 700, color: "#93C5FD", cursor: "pointer", fontFamily: "inherit", padding: 0 }}>
                   Create account ↗
                 </button>

@@ -1,13 +1,15 @@
 import { Router } from "express";
-import { eq, sql, count, desc, and, or } from "drizzle-orm";
+import { eq, sql, count, desc, and, or, gte, lte, not, inArray } from "drizzle-orm";
 import { db } from "../lib/db";
 import {
-  risksTable, controlsTable, ticketsTable, dsarsTable,
+  risksTable, governanceControlsLibraryTable, ticketsTable, dsarsTable,
   auditProgramsTable, grcPoliciesTable, findingsTable,
   cloudFindingsTable, riskVendorsTable, usersTable,
+  riskScoreHistoryTable, riskAppetiteTable, evidenceArtifactsTable, controlCapaTable,
 } from "@workspace/db";
 import { requireAuth } from "../lib/auth";
 import type { JwtPayload } from "../lib/auth";
+import { computeThreatCoverage } from "../lib/threat-coverage.js";
 
 const router = Router();
 
@@ -29,7 +31,7 @@ router.get("/dashboard/kpis", requireAuth, async (req, res) => {
       total:       count(),
       implemented: sql<number>`SUM(CASE WHEN status = 'implemented' THEN 1 ELSE 0 END)`,
       inProgress:  sql<number>`SUM(CASE WHEN status = 'in-progress' THEN 1 ELSE 0 END)`,
-    }).from(controlsTable).where(eq(controlsTable.tenantId, tenantId));
+    }).from(governanceControlsLibraryTable).where(eq(governanceControlsLibraryTable.tenantId, tenantId));
 
     // Active audits from audit_programs table
     const [auditStats] = await db.select({ active: count() })
@@ -62,6 +64,16 @@ router.get("/dashboard/kpis", requireAuth, async (req, res) => {
       accessReviews: sql<number>`SUM(CASE WHEN status NOT IN ('resolved','closed') AND LOWER(title) LIKE '%access%' THEN 1 ELSE 0 END)`,
     }).from(ticketsTable).where(eq(ticketsTable.tenantId, tenantId));
 
+    // Cloud and security findings: feed into risk posture penalty
+    const [cloudStats] = await db.select({
+      critical: sql<number>`SUM(CASE WHEN severity = 'Critical' AND status != 'resolved' THEN 1 ELSE 0 END)`,
+      high:     sql<number>`SUM(CASE WHEN severity = 'High' AND status != 'resolved' THEN 1 ELSE 0 END)`,
+    }).from(cloudFindingsTable).where(eq(cloudFindingsTable.tenantId, tenantId));
+
+    const [secStats] = await db.select({
+      critical: sql<number>`SUM(CASE WHEN severity = 'Critical' AND status != 'resolved' THEN 1 ELSE 0 END)`,
+    }).from(findingsTable).where(eq(findingsTable.tenantId, tenantId));
+
     const totalRisks      = Number(riskStats?.total ?? 0);
     const critCount       = Number(riskStats?.critical ?? 0);
     const highCount       = Number(riskStats?.high ?? 0);
@@ -79,13 +91,18 @@ router.get("/dashboard/kpis", requireAuth, async (req, res) => {
     const openTickets     = Number(ticketStats?.open ?? 0);
     const accessReviews   = Number(ticketStats?.accessReviews ?? 0);
 
+    const critCloudFindings = Number(cloudStats?.critical ?? 0);
+    const highCloudFindings = Number(cloudStats?.high ?? 0);
+    const critSecFindings   = Number(secStats?.critical ?? 0);
+
     // ── GRC Score: 0 baseline, fully driven by real data ──────────────────
-    // 60 pts from control coverage, 30 pts from risk posture, 10 pts from privacy
+    // 60 pts from control coverage (coverage*0.6), 30 pts from risk posture + findings, 15 pt privacy bonus → capped at 99
     const coverage      = totalCtrls > 0
       ? Math.round(((implCtrls + inProgCtrls * 0.5) / totalCtrls) * 100) : 0;
-    const riskPenalty   = totalRisks > 0 ? Math.min(30, critCount * 4 + highCount * 1.5) : 0;
-    const riskScore     = totalRisks > 0 ? Math.max(0, 30 - riskPenalty) : 0;
-    const privBonus     = totalDsars > 0 ? (overdueDsars === 0 ? 10 : Math.max(0, 10 - overdueDsars * 2)) : 0;
+    const riskPenalty   = totalRisks > 0 ? Math.min(25, critCount * 4 + highCount * 1.5) : 0;
+    const findingPenalty = Math.min(5, critCloudFindings * 1.5 + critSecFindings * 1.0 + highCloudFindings * 0.5);
+    const riskScore     = totalRisks > 0 ? Math.max(0, 30 - riskPenalty - findingPenalty) : 0;
+    const privBonus     = totalDsars > 0 ? (overdueDsars === 0 ? 15 : Math.max(0, 15 - overdueDsars * 2)) : 0;
     const hasData       = totalCtrls > 0 || totalRisks > 0;
     const grcScore      = hasData
       ? Math.min(99, Math.max(0, Math.round(coverage * 0.6 + riskScore + privBonus))) : 0;
@@ -115,13 +132,27 @@ router.get("/dashboard/kpis", requireAuth, async (req, res) => {
         { label: "Medium",   count: medCount,  pct: totalRisks > 0 ? medCount  / totalRisks : 0, color: "#1E3A5F" },
         { label: "Low",      count: lowCount,  pct: totalRisks > 0 ? lowCount  / totalRisks : 0, color: "#065F46" },
       ],
-      frameworkCoverage: totalCtrls > 0 ? [
-        { id: "iso27001", name: "ISO 27001",     pct: Math.min(100, Math.round(coverage * 0.87)), trend: "up",   color: "#1E3A5F" },
-        { id: "soc2",     name: "SOC 2 Type II", pct: Math.min(100, Math.round(coverage * 0.93)), trend: "up",   color: "#065F46" },
-        { id: "gdpr",     name: "GDPR",          pct: Math.min(100, Math.round(coverage * 0.79)), trend: "up",   color: "#4338CA" },
-        { id: "hipaa",    name: "HIPAA",         pct: Math.min(100, Math.round(coverage * 0.71)), trend: "flat", color: "#92400E" },
-        { id: "nis2",     name: "NIS2",          pct: Math.min(100, Math.round(coverage * 0.64)), trend: "up",   color: "#0C4A6E" },
-      ] : [],
+      frameworkCoverage: totalCtrls > 0 ? await (async () => {
+        // LOW-F-007: derive framework coverage from the tenant's actual controls
+        // (was a hardcoded ISO/SOC2/GDPR/HIPAA/NIS2 list scaled from overall coverage).
+        const fwRows = await db.select({
+          framework: governanceControlsLibraryTable.framework,
+          total: count(),
+          implemented: sql<number>`SUM(CASE WHEN status = 'implemented' THEN 1 ELSE 0 END)`,
+        }).from(governanceControlsLibraryTable)
+          .where(eq(governanceControlsLibraryTable.tenantId, tenantId))
+          .groupBy(governanceControlsLibraryTable.framework);
+        const colors = ["#1E3A5F","#065F46","#4338CA","#92400E","#0C4A6E","#7C2D12","#374151"];
+        return fwRows
+          .filter(r => r.framework)
+          .map((r, i) => ({
+            id: String(r.framework).toLowerCase().replace(/[^a-z0-9]/g, ""),
+            name: r.framework!,
+            pct: Math.min(100, Math.round((Number(r.implemented) / Math.max(Number(r.total), 1)) * 100)),
+            trend: "up" as const,
+            color: colors[i % colors.length],
+          }));
+      })() : [],
       meta: {
         vendorAvgScore:   Number(vendorStats?.avgScore ?? 0),
         criticalVendors:  Number(vendorStats?.critical ?? 0),
@@ -170,12 +201,12 @@ router.get("/dashboard/activity", requireAuth, async (req, res) => {
         .from(dsarsTable).where(eq(dsarsTable.tenantId, tenantId))
         .orderBy(desc(dsarsTable.id)).limit(6),
 
-      db.select({ id: controlsTable.id, controlId: controlsTable.controlId, name: controlsTable.name,
-                  framework: controlsTable.framework, status: controlsTable.status,
-                  owner: controlsTable.owner, createdAt: sql<Date>`NOW() - INTERVAL '5 days'` })
-        .from(controlsTable)
-        .where(and(eq(controlsTable.tenantId, tenantId), eq(controlsTable.status, "implemented")))
-        .orderBy(desc(controlsTable.id)).limit(5),
+      db.select({ id: governanceControlsLibraryTable.id, controlId: governanceControlsLibraryTable.controlId, name: governanceControlsLibraryTable.name,
+                  framework: governanceControlsLibraryTable.framework, status: governanceControlsLibraryTable.status,
+                  owner: governanceControlsLibraryTable.owner, createdAt: sql<Date>`NOW() - INTERVAL '5 days'` })
+        .from(governanceControlsLibraryTable)
+        .where(and(eq(governanceControlsLibraryTable.tenantId, tenantId), eq(governanceControlsLibraryTable.status, "implemented")))
+        .orderBy(desc(governanceControlsLibraryTable.id)).limit(5),
 
       db.select({ id: grcPoliciesTable.id, policyId: grcPoliciesTable.policyId, title: grcPoliciesTable.title,
                   type: grcPoliciesTable.type, status: grcPoliciesTable.status,
@@ -283,6 +314,236 @@ router.get("/dashboard/activity", requireAuth, async (req, res) => {
     })));
   } catch {
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Command Center endpoints (CISO Cyber Governance & Risk Command Center)
+// See docs/superpowers/specs/2026-06-29-ciso-command-center-design.md §7
+// ─────────────────────────────────────────────────────────────────────────────
+
+// GET /dashboard/control-health — effectiveness breakdown by status + domain
+router.get("/dashboard/control-health", requireAuth, async (req, res) => {
+  try {
+    const { tenantId } = (req as typeof req & { user: JwtPayload }).user;
+
+    const [stats] = await db.select({
+      total:       count(),
+      effective:   sql<number>`SUM(CASE WHEN COALESCE(effectiveness,0) >= 80 THEN 1 ELSE 0 END)`,
+      partial:     sql<number>`SUM(CASE WHEN COALESCE(effectiveness,0) BETWEEN 50 AND 79 THEN 1 ELSE 0 END)`,
+      failed:      sql<number>`SUM(CASE WHEN COALESCE(effectiveness,0) BETWEEN 1 AND 49 THEN 1 ELSE 0 END)`,
+      notTested:   sql<number>`SUM(CASE WHEN COALESCE(effectiveness,0) = 0 THEN 1 ELSE 0 END)`,
+    }).from(governanceControlsLibraryTable).where(eq(governanceControlsLibraryTable.tenantId, tenantId));
+
+    // effectiveness avg by domain
+    const domainRows = await db.select({
+      domain: sql<string>`COALESCE(domain,'Uncategorised')`,
+      avg:    sql<number>`ROUND(AVG(COALESCE(effectiveness,0))::numeric,0)`,
+      total:  count(),
+    }).from(governanceControlsLibraryTable)
+      .where(eq(governanceControlsLibraryTable.tenantId, tenantId))
+      .groupBy(sql`COALESCE(domain,'Uncategorised')`);
+
+    const total = Number(stats?.total ?? 0) || 1;
+    res.json({
+      effective:   Number(stats?.effective ?? 0),
+      partial:     Number(stats?.partial ?? 0),
+      failed:      Number(stats?.failed ?? 0),
+      notTested:   Number(stats?.notTested ?? 0),
+      total:       Number(stats?.total ?? 0),
+      effectivenessPct: Math.round(
+        ((Number(stats?.effective ?? 0) + Number(stats?.partial ?? 0) * 0.5) / total) * 100,
+      ),
+      domains: domainRows.map((d) => ({ domain: d.domain, avg: Number(d.avg), total: Number(d.total) })),
+    });
+  } catch (err) {
+    console.error("GET /dashboard/control-health failed", err);
+    res.status(500).json({ error: "failed_to_compute_control_health" });
+  }
+});
+
+// GET /dashboard/risk-posture?from=&to= — cyber risk score series + movement counters
+router.get("/dashboard/risk-posture", requireAuth, async (req, res) => {
+  try {
+    const { tenantId } = (req as typeof req & { user: JwtPayload }).user;
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 90);
+    if (typeof req.query.from === "string") {
+      const t = Date.parse(req.query.from); if (!Number.isNaN(t)) from.setTime(t);
+    }
+    if (typeof req.query.to === "string") {
+      const t = Date.parse(req.query.to); if (!Number.isNaN(t)) to.setTime(t);
+    }
+
+    const hist = await db.select({
+      createdAt:   riskScoreHistoryTable.createdAt,
+      newScore:    riskScoreHistoryTable.newScore,
+      prevScore:   riskScoreHistoryTable.prevScore,
+      newSeverity: riskScoreHistoryTable.newSeverity,
+    }).from(riskScoreHistoryTable)
+      .where(and(eq(riskScoreHistoryTable.tenantId, tenantId), gte(riskScoreHistoryTable.createdAt, from), lte(riskScoreHistoryTable.createdAt, to)));
+
+    // bucket by day → avg score series
+    const buckets = new Map<string, { sum: number; n: number }>();
+    for (const h of hist) {
+      const day = new Date(h.createdAt).toISOString().slice(0, 10);
+      const b = buckets.get(day) ?? { sum: 0, n: 0 };
+      b.sum += Number(h.newScore); b.n++; buckets.set(day, b);
+    }
+    const series = [...buckets.entries()].sort((a, b) => a[0] < b[0] ? -1 : 1)
+      .map(([date, b]) => ({ date, score: Math.round(b.sum / b.n) }));
+
+    // movement counters
+    const increased = hist.filter((h) => Number(h.newScore) > Number(h.prevScore)).length;
+    const reduced   = hist.filter((h) => Number(h.newScore) < Number(h.prevScore)).length;
+    const newRisks  = hist.filter((h) => Number(h.prevScore) === 0).length;
+
+    // appetite breaches = active critical+high risks (proxy; full appetite join in /risks/appetite).
+    // "active" = not closed/retired/resolved — the live DB uses treating/assessing/identified.
+    const [appetite] = await db.select({ total: count() }).from(risksTable)
+      .where(and(eq(risksTable.tenantId, tenantId), not(inArray(risksTable.status, ["closed","retired","resolved"])),
+        or(eq(risksTable.severity, "Critical"), eq(risksTable.severity, "High"))));
+
+    res.json({
+      series,
+      counters: {
+        newRisks,
+        increased,
+        reduced,
+        accepted: 0,
+        overdueTreatments: 0,
+        appetiteBreaches: Number(appetite?.total ?? 0),
+      },
+    });
+  } catch (err) {
+    console.error("GET /dashboard/risk-posture failed", err);
+    res.status(500).json({ error: "failed_to_compute_risk_posture" });
+  }
+});
+
+// GET /dashboard/threat-coverage — threat→control coverage matrix (Gap B)
+router.get("/dashboard/threat-coverage", requireAuth, async (req, res) => {
+  try {
+    const { tenantId } = (req as typeof req & { user: JwtPayload }).user;
+
+    // pull per-control effectiveness from the control library (one row per
+    // control_id), then group in JS — Postgres can't aggregate the per-control
+    // CASE status when grouping by domain (the column isn't in GROUP BY).
+    const ctrlRows = await db.select({
+      controlId: governanceControlsLibraryTable.controlId,
+      domain: sql<string>`COALESCE(${governanceControlsLibraryTable.domain},'Uncategorised')`,
+      effectiveness: governanceControlsLibraryTable.effectiveness,
+    }).from(governanceControlsLibraryTable)
+      .where(eq(governanceControlsLibraryTable.tenantId, tenantId));
+
+    const statusFor = (eff: number | null): string =>
+      eff == null ? "not_tested"
+      : eff >= 80 ? "effective"
+      : eff >= 50 ? "partial"
+      : eff > 0 ? "failed" : "not_tested";
+
+    // group control ids by domain+status so computeThreatCoverage can match
+    const byDomainStatus = new Map<string, { controlIds: string[]; domain: string; status: string }>();
+    for (const c of ctrlRows) {
+      const st = statusFor(c.effectiveness as number | null);
+      // expand each control into one entry per (domain,status) bucket
+      const key = `${c.domain}||${st}`;
+      const bucket = byDomainStatus.get(key) ?? { controlIds: [], domain: c.domain as string, status: st };
+      bucket.controlIds.push(c.controlId);
+      byDomainStatus.set(key, bucket);
+    }
+    const controls = [...byDomainStatus.values()];
+
+    // residual risk per threat from active risks (by category keyword).
+    // "active" = not closed/retired/resolved (live DB uses treating/assessing/identified).
+    const openRisks = await db.select({ category: risksTable.category, severity: risksTable.severity })
+      .from(risksTable).where(and(eq(risksTable.tenantId, tenantId), not(inArray(risksTable.status, ["closed","retired","resolved"]))));
+    const residualByThreat: Record<string, string> = {};
+    const rank: Record<string, number> = { Critical: 4, High: 3, Medium: 2, Low: 1 };
+    for (const r of openRisks) {
+      const cat = (r.category ?? "").toLowerCase();
+      for (const t of [{ id: "cloud-misconfig", kw: "cloud" }, { id: "vendor-compromise", kw: "vendor" }, { id: "credential-compromise", kw: "identity" }, { id: "data-exfiltration", kw: "data" }]) {
+        if (cat.includes(t.kw)) {
+          const cur = rank[residualByThreat[t.id] ?? "Low"] ?? 0;
+          const cand = rank[r.severity ?? "Low"] ?? 0;
+          if (cand > cur) residualByThreat[t.id] = r.severity ?? "Low";
+        }
+      }
+    }
+
+    res.json({ rows: computeThreatCoverage(controls, residualByThreat) });
+  } catch (err) {
+    console.error("GET /dashboard/threat-coverage failed", err);
+    res.status(500).json({ error: "failed_to_compute_threat_coverage" });
+  }
+});
+
+// GET /dashboard/attention — AI-ranked priority alerts across modules
+router.get("/dashboard/attention", requireAuth, async (req, res) => {
+  try {
+    const { tenantId } = (req as typeof req & { user: JwtPayload }).user;
+    const alerts: Array<Record<string, unknown>> = [];
+
+    // Rule 1: active critical risks (appetite breach proxy). "active" =
+    // not closed/retired/resolved — the live DB uses treating/assessing/identified.
+    const critRisks = await db.select().from(risksTable)
+      .where(and(eq(risksTable.tenantId, tenantId), not(inArray(risksTable.status, ["closed","retired","resolved"])), eq(risksTable.severity, "Critical")))
+      .limit(5);
+    for (const r of critRisks) {
+      alerts.push({
+        id: `risk-${r.id}`, severity: "Critical", module: "Risk Register",
+        title: `${r.name ?? "Critical risk"} breaching appetite`,
+        owner: r.owner ?? "Unassigned", due: null,
+        linkedId: r.id, linkedType: "risk",
+        created: r.lastReviewAt ?? r.createdAt ?? new Date(), action: "Create risk treatment",
+      });
+    }
+
+    // Rule 2: controls failed in latest test
+    const failedCtrls = await db.select().from(governanceControlsLibraryTable)
+      .where(and(eq(governanceControlsLibraryTable.tenantId, tenantId), sql`COALESCE(effectiveness,0) BETWEEN 1 AND 49`)).limit(5);
+    for (const c of failedCtrls) {
+      alerts.push({
+        id: `ctrl-${c.id}`, severity: "High", module: "Control Library",
+        title: `Control failed latest test: ${c.name}`,
+        owner: c.owner ?? "Unassigned", due: c.nextTest ?? null,
+        linkedId: c.id, linkedType: "control",
+        created: c.lastTested ?? new Date(), action: "Open finding",
+      });
+    }
+
+    // Rule 3: missing evidence
+    const [evGap] = await db.select({ missing: count() }).from(evidenceArtifactsTable)
+      .where(and(eq(evidenceArtifactsTable.tenantId, tenantId), eq(evidenceArtifactsTable.status, "missing")));
+    if (Number(evGap?.missing ?? 0) > 0) {
+      alerts.push({
+        id: "ev-missing", severity: "High", module: "Evidence Repo",
+        title: `${evGap?.missing} missing evidence items blocking compliance`,
+        owner: "Evidence team", due: null, linkedId: null, linkedType: "evidence",
+        created: new Date(), action: "Request evidence",
+      });
+    }
+
+    // Rule 4: overdue CAPA (dueDate is text YYYY-MM-DD; compare lexicographically)
+    const [capaOverdue] = await db.select({ total: count() }).from(controlCapaTable)
+      .where(and(eq(controlCapaTable.tenantId, tenantId), sql`status NOT IN ('closed') AND due_date <> '' AND due_date < TO_CHAR(NOW(),'YYYY-MM-DD')`));
+    if (Number(capaOverdue?.total ?? 0) > 0) {
+      alerts.push({
+        id: "capa-overdue", severity: "High", module: "Audit",
+        title: `${capaOverdue?.total} overdue CAPA items`,
+        owner: "Audit team", due: null, linkedId: null, linkedType: "capa",
+        created: new Date(), action: "Open finding",
+      });
+    }
+
+    // rank: Critical > High > Medium
+    const sevRank: Record<string, number> = { Critical: 0, High: 1, Medium: 2 };
+    alerts.sort((a, b) => (sevRank[a.severity as keyof typeof sevRank] ?? 9) - (sevRank[b.severity as keyof typeof sevRank] ?? 9));
+    res.json({ alerts, total: alerts.length });
+  } catch (err) {
+    console.error("GET /dashboard/attention failed", err);
+    res.status(500).json({ error: "failed_to_compute_attention" });
   }
 });
 
